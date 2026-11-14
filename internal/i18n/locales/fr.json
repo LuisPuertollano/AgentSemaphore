@@ -3,7 +3,7 @@
   "state.orange": "En cours",
   "state.green": "Tout est calme",
   "state.grey": "Inconnu — une source n'a pas pu être lue",
-  "tooltip.allQuiet": "Tout est calme, rien ne vous attend",
+  "tooltip.allQuiet": "Tout est calme sur ce PC, rien ne vous attend",
   "tooltip.summary": "{waiting} en attente · {working} en cours · {idle} au repos",
   "tooltip.unknown": "Illisible : {sources}",
   "tooltip.starting": "Démarrage…",
@@ -17,5 +17,9 @@
   "reason.toast": "chat/Cowork",
   "source.claudeCode": "Sessions Claude Code",
   "source.claudeDesktopToasts": "Notifications de Claude Desktop",
-  "source.error": "{source} : illisible ({detail})"
+  "source.error": "{source} : illisible ({detail})",
+  "menu.sourceNothing": "rien en attente",
+  "menu.sourceAbsent": "introuvable sur ce système",
+  "menu.toastsRedOnly": "n'affiche que ce qui vous attend",
+  "menu.notVisible": "Non visible : sessions cloud avec une boîte de dialogue ouverte, autres machines"
 }

@@ -3,7 +3,7 @@
   "state.orange": "工作中",
   "state.green": "一切空闲",
   "state.grey": "未知 — 有数据源无法读取",
-  "tooltip.allQuiet": "一切空闲，没有需要你处理的事",
+  "tooltip.allQuiet": "这台电脑上一切空闲，没有需要你处理的事",
   "tooltip.summary": "{waiting} 个等待你 · {working} 个工作中 · {idle} 个空闲",
   "tooltip.unknown": "无法读取：{sources}",
   "tooltip.starting": "正在启动…",
@@ -17,5 +17,9 @@
   "reason.toast": "聊天/Cowork",
   "source.claudeCode": "Claude Code 会话",
   "source.claudeDesktopToasts": "Claude Desktop 通知",
-  "source.error": "{source}：无法读取（{detail}）"
+  "source.error": "{source}：无法读取（{detail}）",
+  "menu.sourceNothing": "没有待处理的事",
+  "menu.sourceAbsent": "此系统上未找到",
+  "menu.toastsRedOnly": "只显示需要你处理的事",
+  "menu.notVisible": "不可见：打开对话框时的云端会话、其他电脑"
 }

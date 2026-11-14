@@ -3,7 +3,7 @@
   "state.orange": "Working",
   "state.green": "All quiet",
   "state.grey": "Unknown — a source could not be read",
-  "tooltip.allQuiet": "All quiet, nothing is waiting for you",
+  "tooltip.allQuiet": "All quiet on this PC, nothing is waiting for you",
   "tooltip.summary": "{waiting} waiting · {working} working · {idle} idle",
   "tooltip.unknown": "Cannot read: {sources}",
   "tooltip.starting": "Starting…",
@@ -17,5 +17,9 @@
   "reason.toast": "chat/Cowork",
   "source.claudeCode": "Claude Code sessions",
   "source.claudeDesktopToasts": "Claude Desktop notifications",
-  "source.error": "{source}: not readable ({detail})"
+  "source.error": "{source}: not readable ({detail})",
+  "menu.sourceNothing": "nothing pending",
+  "menu.sourceAbsent": "not found on this system",
+  "menu.toastsRedOnly": "shows only what needs you",
+  "menu.notVisible": "Not visible: cloud sessions while a dialog is open, other machines"
 }

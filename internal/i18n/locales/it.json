@@ -3,7 +3,7 @@
   "state.orange": "Al lavoro",
   "state.green": "Tutto tranquillo",
   "state.grey": "Sconosciuto — una fonte non è leggibile",
-  "tooltip.allQuiet": "Tutto tranquillo, niente ti aspetta",
+  "tooltip.allQuiet": "Tutto tranquillo su questo PC, niente ti aspetta",
   "tooltip.summary": "{waiting} in attesa · {working} al lavoro · {idle} inattive",
   "tooltip.unknown": "Non leggibile: {sources}",
   "tooltip.starting": "Avvio…",
@@ -17,5 +17,9 @@
   "reason.toast": "chat/Cowork",
   "source.claudeCode": "Sessioni di Claude Code",
   "source.claudeDesktopToasts": "Notifiche di Claude Desktop",
-  "source.error": "{source}: non leggibile ({detail})"
+  "source.error": "{source}: non leggibile ({detail})",
+  "menu.sourceNothing": "niente in sospeso",
+  "menu.sourceAbsent": "non trovato su questo sistema",
+  "menu.toastsRedOnly": "mostra solo ciò che ti aspetta",
+  "menu.notVisible": "Non visibile: sessioni cloud con una finestra di dialogo aperta, altri computer"
 }

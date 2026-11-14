@@ -15,8 +15,32 @@ import (
 	"github.com/LuisPuertollano/AgentSemaphore/internal/state"
 )
 
-// maxMenuSessions is how many sessions the menu lists; the rest are summarised.
-const maxMenuSessions = 12
+// maxMenuRows is how many lines the status part of the menu can show
+// (group titles, sessions, notes); the rest are summarised as "+N".
+const maxMenuRows = 24
+
+// menuRows turns the view into the status lines of the menu: one block per
+// source (title, then its sessions or a note), and finally what no source sees.
+func menuRows(v aggregate.View) []string {
+	var rows []string
+	for _, g := range v.Groups {
+		rows = append(rows, "■ "+g.Title)
+		for _, s := range g.Sessions {
+			label := fmt.Sprintf("    %s  %s", dots[s.State], s.Name)
+			if s.Detail != "" && (s.State == state.Red || s.State == state.Grey) {
+				label += "  (" + s.Detail + ")"
+			}
+			rows = append(rows, label)
+		}
+		if g.Note != "" && len(g.Sessions) == 0 {
+			rows = append(rows, "    "+g.Note)
+		}
+	}
+	if v.NotVisible != "" {
+		rows = append(rows, "ⓘ "+v.NotVisible)
+	}
+	return rows
+}
 
 type trayConfig struct {
 	sources  []source.Source
@@ -44,7 +68,7 @@ func onReady(cfg trayConfig) {
 	systray.SetIcon(iconBytes(state.Grey))
 	systray.SetTooltip("AgentSemaphore: " + T("tooltip.starting"))
 
-	items := make([]*systray.MenuItem, maxMenuSessions)
+	items := make([]*systray.MenuItem, maxMenuRows)
 	for i := range items {
 		items[i] = systray.AddMenuItem("", "")
 		items[i].Disable()
@@ -53,8 +77,6 @@ func onReady(cfg trayConfig) {
 	more := systray.AddMenuItem("", "")
 	more.Disable()
 	more.Hide()
-	none := systray.AddMenuItem(T("menu.noSessions"), "")
-	none.Disable()
 	systray.AddSeparator()
 	quit := systray.AddMenuItem(T("menu.quit"), "")
 	go func() {
@@ -72,29 +94,20 @@ func onReady(cfg trayConfig) {
 			prev = v.State
 		}
 		systray.SetTooltip(truncate("AgentSemaphore: "+v.Tooltip, 127))
+		rows := menuRows(v)
 		for i, it := range items {
-			if i < len(v.Sessions) {
-				s := v.Sessions[i]
-				label := fmt.Sprintf("%s  %s", dots[s.State], s.Name)
-				if s.Detail != "" && (s.State == state.Red || s.State == state.Grey) {
-					label += "  (" + s.Detail + ")"
-				}
-				it.SetTitle(label)
+			if i < len(rows) {
+				it.SetTitle(rows[i])
 				it.Show()
 			} else {
 				it.Hide()
 			}
 		}
-		if extra := len(v.Sessions) - maxMenuSessions; extra > 0 {
+		if extra := len(rows) - maxMenuRows; extra > 0 {
 			more.SetTitle(fmt.Sprintf("+%d …", extra))
 			more.Show()
 		} else {
 			more.Hide()
-		}
-		if len(v.Sessions) == 0 {
-			none.Show()
-		} else {
-			none.Hide()
 		}
 	}
 	go func() {
