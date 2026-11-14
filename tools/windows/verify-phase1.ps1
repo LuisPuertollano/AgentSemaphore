@@ -9,7 +9,8 @@
   1. Toast texts (-SkipToasts to skip): searches the installed Claude Desktop
      package for the known Spanish toast phrases and lists the same messages in
      every language the package contains (English, German, ...).
-  2. Claude Code CLI (-SkipCli to skip): opens short Claude Code sessions in new
+  2. Claude Code CLI (-SkipCli to skip). Run the script from a normal PowerShell
+     window, not from inside a Claude session. It opens short Claude Code sessions in new
      windows, each with a prompt that should make it wait for you, records what
      its session file says, then closes it. Nothing to answer, except possibly
      once "Do you trust this folder?" -> Yes.
@@ -60,7 +61,8 @@ if (-not $SkipToasts) {
     $pkgVersion = Split-Path $root -Leaf
     Say "Package: $pkgVersion"
     Note "Searching the Claude Desktop package (read-only, may take a minute)..."
-    $phrases = @('necesita tu respuesta', 'esperando tu respuesta', 'necesita tu aprobaci', 'Tarea programada completada', 'Tarea programada')
+    # Exact Spanish texts of the toasts seen on a real machine (FINDINGS §3).
+    $phrases = @('Claude necesita tu respuesta para continuar', 'Claude está esperando tu respuesta', 'La tarea programada necesita tu aprobación', 'Tarea programada completada')
     $found = @(Find-LocalisedStrings -Root $root -Phrases $phrases)
     if (-not $found.Count) { Say "No phrase found in .json/.asar/.js files under the package." }
     foreach ($f in $found) {
@@ -109,7 +111,7 @@ function New-DoneCheck([string]$expect, [double]$hold) {
 }
 
 $scenarios = @(
-  [pscustomobject]@{ Id = 'A1'; What = 'permission dialog';      Mode = 'default'; Expect = 'waiting'; Prompt = 'Run the shell command whoami and tell me the result.' }
+  [pscustomobject]@{ Id = 'A1'; What = 'permission dialog';      Mode = 'default'; Expect = 'waiting'; Prompt = 'Run exactly this shell command and nothing else: New-Item -ItemType File -Path agentsemaphore-probe.txt' }
   [pscustomobject]@{ Id = 'A2'; What = 'AskUserQuestion';        Mode = 'default'; Expect = 'waiting'; Prompt = 'Use the AskUserQuestion tool to ask me which colour I prefer: red, green or blue. Do nothing else.' }
   [pscustomobject]@{ Id = 'A3'; What = 'plan approval';          Mode = 'plan';    Expect = 'waiting'; Prompt = 'Plan in one line how to create an empty file hello.txt in this folder and present the plan for approval. Do not read any files.' }
   [pscustomobject]@{ Id = 'A5'; What = 'plain-text question';    Mode = 'default'; Expect = 'idle';    Prompt = 'Ask me in plain text what my favourite food is, then stop. Do not use any tool.' }
@@ -123,7 +125,17 @@ if (-not $SkipCli) {
     Say "Claude Code CLI not found on PATH; skipped."
   } else {
     New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
-    Note "New windows will open and close by themselves. If one asks 'Do you trust this folder?', choose Yes. Do not answer anything else."
+    # When this script itself runs inside a Claude Code session, the CLI windows it
+    # opens inherit CLAUDE_CODE_* markers, become "child sessions" and do not save
+    # their state (seen 2026-11-14: "Transcript saving is off - inherited
+    # CLAUDE_CODE_CHILD_SESSION marker"). Start them with a clean environment.
+    $inherited = @(Get-ChildItem Env: | Where-Object { $_.Name -like 'CLAUDE_CODE_*' -or $_.Name -eq 'CLAUDECODE' })
+    if ($inherited.Count) {
+      Note "Removing inherited Claude Code variables for the test windows: $($inherited.Name -join ', ')"
+      foreach ($v in $inherited) { Remove-Item -LiteralPath "Env:$($v.Name)" }
+    }
+    Note "New windows will open and close by themselves. If one asks 'Do you trust this folder?', choose Yes. Do not answer anything else, and do not log in from those windows."
+    if ((& $claudeCmd.Source auth status 2>$null) -match 'not logged in|Not logged') { Say "Warning: the CLI reports it is not logged in; run 'claude' once and /login first." }
     Say ""
     Say "| Step | Expected | Seen (time → status [waitingFor]) | procStart field |"
     Say "|---|---|---|---|"

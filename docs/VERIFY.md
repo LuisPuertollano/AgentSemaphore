@@ -12,7 +12,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools\windows\verify-phase1.ps1 -D
 
 - **Toast texts:** read from the installed Claude Desktop package in every language it ships.
   No need to switch the app's language.
-- **CLI:** short sessions open in new windows and close by themselves.
+- **CLI:** short sessions open in new windows and close by themselves. Run the script from a normal
+  PowerShell window, not from inside a Claude session: windows opened from a Claude session become
+  "child sessions" and do not save their state.
 - **Code tab:** cannot be driven from outside (no UI Automation tree). With `-Desktop`, the script
   puts each prompt in the clipboard; you paste it and answer when told.
 

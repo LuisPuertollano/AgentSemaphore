@@ -28,7 +28,7 @@ getting spammed by notifications.
 
 ## Where things run
 
-- Development: Claude Code in the cloud or on the Proxmox VM `claude-box` (VMID 152, node `proxmox1`).
+- Development: Claude Code in the cloud or on a home-lab VM (`claude-box`).
   Progress lives in this repo, never only on a laptop.
 - Real Windows testing happens on Luis's laptop (Windows 11 **ARM64**, Claude Desktop from the
   Microsoft Store, PowerShell 7 Store build, Python 3.12 arm64). Treat ARM64 as first-class.

@@ -1,20 +1,65 @@
 {
-  "_comentario": "Frases (regex, sin distinguir mayusculas) de los avisos de Claude Desktop. 'pide' = te necesita (rojo). 'ignorar' = no te necesita. Un aviso de Claude que no coincide con ninguna cuenta como rojo y se apunta en cambios.log para anadirlo aqui. 'verificado' dice si las frases se han visto en un Windows real con ese idioma.",
+  "_comentario": "Frases (regex, sin distinguir mayusculas) de los avisos de Claude Desktop. 'pide' = te necesita (rojo). 'ignorar' = no te necesita. Un aviso de Claude que no coincide con ninguna cuenta como rojo y se apunta en cambios.log. 'verificado': 'aviso real' = visto en un aviso real de Windows; 'paquete' = texto sacado del paquete de Claude Desktop 5.11492.5.0 (2026-11-14). 'ejemplos' son los textos exactos del paquete; los tests comprueban que encajan.",
   "idiomas": {
     "es": {
-      "verificado": true,
-      "pide": ["necesita tu (respuesta|aprobaci)", "esperando tu respuesta"],
-      "ignorar": ["tarea programada completada"]
+      "verificado": "aviso real",
+      "pide": [
+        "necesita tu (respuesta|aprobaci)",
+        "esperando tu respuesta"
+      ],
+      "ignorar": [
+        "tarea programada completada"
+      ],
+      "ejemplos": {
+        "pide": [
+          "Claude necesita tu respuesta para continuar",
+          "Claude está esperando tu respuesta",
+          "La tarea programada necesita tu aprobación"
+        ],
+        "ignorar": [
+          "Tarea programada completada"
+        ]
+      }
     },
     "en": {
-      "verificado": false,
-      "pide": ["needs your (response|input|approval)", "waiting for your"],
-      "ignorar": ["scheduled task (completed|finished)"]
+      "verificado": "paquete",
+      "pide": [
+        "needs your (response|input|approval)",
+        "waiting for your"
+      ],
+      "ignorar": [
+        "scheduled task (completed|finished)"
+      ],
+      "ejemplos": {
+        "pide": [
+          "Claude needs your input to continue",
+          "Claude is waiting for your input",
+          "Scheduled task needs your approval"
+        ],
+        "ignorar": [
+          "Scheduled task completed"
+        ]
+      }
     },
     "de": {
-      "verificado": false,
-      "pide": ["wartet auf", "ben.tigt deine"],
-      "ignorar": ["geplante aufgabe (abgeschlossen|erledigt)"]
+      "verificado": "paquete",
+      "pide": [
+        "wartet auf",
+        "ben.tigt deine"
+      ],
+      "ignorar": [
+        "geplante aufgabe (abgeschlossen|erledigt)"
+      ],
+      "ejemplos": {
+        "pide": [
+          "Claude benötigt deine Eingabe, um fortzufahren",
+          "Claude wartet auf deine Eingabe",
+          "Geplante Aufgabe benötigt deine Genehmigung"
+        ],
+        "ignorar": [
+          "Geplante Aufgabe abgeschlossen"
+        ]
+      }
     }
   }
 }

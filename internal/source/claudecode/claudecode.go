@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/LuisPuertollano/AgentSemaphore/internal/proc"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source"
@@ -29,15 +30,23 @@ const ID = "claudeCode"
 // tolerated (a file can be caught half-written) before it shows grey.
 const failuresBeforeGrey = 3
 
+// StartingGrace is how long a session may have an empty status. Claude Desktop
+// creates short-lived session files with no status while a session starts
+// (seen on Windows, < 1 s); they must not flash grey.
+const StartingGrace = 10 * time.Second
+
 // Source reads one sessions directory.
 type Source struct {
 	Dir string
 	// IsAgent reports whether pid is a running Claude Code process. Defaults
 	// to IsClaudeProcess; tests replace it.
 	IsAgent func(pid int) bool
+	// Now defaults to time.Now; tests replace it.
+	Now func() time.Time
 
-	failures map[string]int
-	lastGood map[string]file
+	failures  map[string]int
+	lastGood  map[string]file
+	firstSeen map[string]time.Time
 }
 
 type file struct {
@@ -84,6 +93,11 @@ func (s *Source) Poll() source.Result {
 	if s.failures == nil {
 		s.failures = map[string]int{}
 		s.lastGood = map[string]file{}
+		s.firstSeen = map[string]time.Time{}
+	}
+	now := time.Now
+	if s.Now != nil {
+		now = s.Now
 	}
 	isAgent := s.IsAgent
 	if isAgent == nil {
@@ -129,6 +143,14 @@ func (s *Source) Poll() source.Result {
 		case !isAgent(f.Pid):
 			continue // closed session or reused pid
 		}
+		if f.Status == "" {
+			if _, ok := s.firstSeen[key]; !ok {
+				s.firstSeen[key] = now()
+			}
+			if now().Sub(s.firstSeen[key]) < StartingGrace {
+				continue // starting up
+			}
+		}
 		st := StateOf(f.Status)
 		detail := f.WaitingFor
 		if st == state.Grey {
@@ -140,6 +162,11 @@ func (s *Source) Poll() source.Result {
 		if !seen[k] {
 			delete(s.failures, k)
 			delete(s.lastGood, k)
+		}
+	}
+	for k := range s.firstSeen {
+		if !seen[k] {
+			delete(s.firstSeen, k)
 		}
 	}
 	sort.Slice(res.Sessions, func(i, j int) bool { return res.Sessions[i].Name < res.Sessions[j].Name })

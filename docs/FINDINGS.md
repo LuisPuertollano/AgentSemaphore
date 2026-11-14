@@ -32,12 +32,40 @@ are expected to arrive as permission dialogs. This logic lives in the terminal U
 **Code** tab (which draws its own dialogs) still has to be checked on a real machine
 ([issue #11](https://github.com/LuisPuertollano/AgentSemaphore/issues/11)).
 
+**Verified on the laptop (2026-11-14, Windows 11 ARM64, Desktop Code tab on a local folder, bundled
+Claude Code 2.1.325, read-only probe):**
+
+| Prompt | `status` / `waitingFor` | Timing |
+|---|---|---|
+| Tool permission dialog (permission mode "Ask") | `waiting` / `permission prompt` | set when the dialog appeared, back to `busy` on approval |
+| AskUserQuestion | `waiting` / `input needed` | set within ~0.1 s of the question |
+| Same session in **Auto** permission mode | no dialog, so no `waiting` (expected) | — |
+| Plan approval | not tested yet | — |
+
+- Windows session files carry `procStart` and `pidDomain` too.
+- Claude Desktop creates **short-lived session files with an empty `status`** (< 1 s) while sessions start
+  (named like `<user>-6f` or `<project>-24`). An empty status is therefore ignored for 10 s before it counts
+  as unknown (grey), so the tray does not flash grey.
+- **CLI 2.1.235 (npm install, Windows):** four sessions started from a script ran 2 min each and wrote only
+  `<pid>.<hash>.key`, **no `.json`**. The script had been started from inside a Claude Code session, and
+  every CLI window showed *"Transcript saving is off — inherited `CLAUDE_CODE_CHILD_SESSION` marker"*.
+  Likely cause: child sessions do not save their state. The script now clears `CLAUDE_CODE_*` variables
+  before launching. To recheck from a normal PowerShell window.
+- In the CLI, `whoami` ran **without** a permission dialog (read-only commands are allowed automatically),
+  while the Desktop Code tab asked. The test now uses a command that writes a file.
+
+**Documented alternative:** `claude agents --json` ("print active sessions … as a JSON array … for
+scripting; does not require a TTY") returns the local sessions with `pid`, `cwd`, `kind`, `startedAt`,
+`sessionId`, `name`, `status` (checked on Linux, 2.1.325). Local sessions only. A candidate to replace
+reading the files, and the natural command to run over SSH on other machines (#24). Its start-up cost
+per poll has not been measured yet.
+
 **Linux uses the same format** (checked in a cloud container, 2.1.325): `~/.claude/sessions/<pid>.json`
 with the same fields plus `procStart` (process start time, useful against PID reuse), `pidDomain`,
 `nameSource`, `peerProtocol`, `messagingSocketPath`. A `<pid>.<hash>.key` file sits next to it.
 
 **Gap observed (2026-11-14):** the claude.ai session list reported a Remote Control session
-("Proxmox SysAdmin") as "Waiting on permission: AskUserQuestion" while the laptop tray showed only
+as "Waiting on permission: AskUserQuestion" while the laptop tray showed only
 "1 idle". Checked on the laptop the same day: `~/.claude/sessions` held a single file
 (`status: idle`, `entrypoint: claude-desktop`, process `claude`) — the waiting session was **not
 running on the laptop**, so the tray was right about the laptop. It was a Claude Desktop **Code** tab
@@ -82,6 +110,16 @@ Clearing rule: a toast counts as red until the Claude window has been in the for
 Localisation: the phrases live in `prototype/windows/avisos-textos.json` per language; only Spanish is
 verified, English/German are **not yet verified** (procedure in `docs/VERIFY.md`). A Claude toast that
 matches no known phrase counts as red (better a red too many than a wrong green) and is logged.
+
+**Cloud sessions do not post toasts (live test, 2026-11-14):** a Claude Code session on claude.ai/code,
+opened from Claude Desktop, waited on AskUserQuestion with Desktop in the background. No Windows toast arrived
+and nothing appeared in the notification center. Cloud sessions are invisible to every local source
+([issue #22](https://github.com/LuisPuertollano/AgentSemaphore/issues/22)).
+
+**Toast texts in other languages:** the Desktop package (`Claude_5.11492.5.0_arm64`, file `ion-dist.asar`)
+ships its UI strings in at least en, es, de, fr, it, pt, hi, id, ja and ko. `tools/windows/verify-phase1.ps1`
+extracts them without switching the app's language. The exact keys of the four toast texts are still to be picked
+out of the results (the phrase "Tarea programada" alone matched 262 keys).
 
 ## 4. Silent notifications keep the data source alive
 

@@ -49,6 +49,13 @@ Write-Ses '101.json' '{"pid":101,"na'
 1..2 | ForEach-Object { $null = @(Read-Sesiones $dir $vivos) }
 Check ((@(Read-Sesiones $dir $vivos) | Where-Object Nombre -eq '101.json').Color -eq 'gris') 'persistently broken file -> gris even with a last good reading'
 Remove-Item -LiteralPath (Join-Path $dir '101.json'), (Join-Path $dir '104.json')
+# A starting session (empty status) is ignored during the grace period, grey after it
+Write-Ses '107.json' '{"pid":103,"name":"starting","status":""}'
+Check (-not (@(Read-Sesiones $dir $vivos) | Where-Object Nombre -eq 'starting')) 'empty status ignored while starting (no grey flicker)'
+$script:graciaSeg = 0
+Check ((@(Read-Sesiones $dir $vivos) | Where-Object Nombre -eq 'starting').Color -eq 'gris') 'empty status after the grace period -> gris'
+$script:graciaSeg = 10
+Remove-Item -LiteralPath (Join-Path $dir '107.json')
 Write-Ses '105.json' '{"sessionId":"x","status":"idle"}'
 Check ((@(Read-Sesiones $dir $vivos) | Where-Object Nombre -eq '105.json').Color -eq 'gris') 'file without pid -> gris'
 Remove-Item -LiteralPath $dir -Recurse -Force

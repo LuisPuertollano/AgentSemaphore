@@ -87,6 +87,25 @@ class AvisosTest(unittest.TestCase):
         self.assertFalse(out['ok'])
         self.assertIn('Notification', out['error'])
 
+    def test_exact_package_texts_in_every_language(self):
+        # The exact strings shipped in the Claude Desktop package must classify as listed.
+        with open(os.path.join(os.path.dirname(AVISOS), 'avisos-textos.json'), encoding='utf-8') as f:
+            langs = json.load(f)['idiomas']
+        expected = {}
+        for lang, v in langs.items():
+            for kind in ('pide', 'ignorar'):
+                for text in v['ejemplos'][kind]:
+                    self.add('Chat %s %d' % (lang, self.next_id), text)
+                    expected['Chat %s %d' % (lang, self.next_id - 1)] = kind
+        rc, out = self.run_avisos()
+        self.assertEqual(rc, 0)
+        got = {a['nombre']: a['tipo'] for a in out['avisos']}
+        for name, kind in expected.items():
+            if kind == 'pide':
+                self.assertEqual(got.get(name), 'pide', name)
+            else:
+                self.assertNotIn(name, got, name)
+
     def test_missing_database_is_an_error(self):
         os.remove(os.path.join(self.src, 'wpndatabase.db'))
         rc, out = self.run_avisos()
