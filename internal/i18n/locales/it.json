@@ -1,0 +1,21 @@
+{
+  "state.red": "In attesa di te",
+  "state.orange": "Al lavoro",
+  "state.green": "Tutto tranquillo",
+  "state.grey": "Sconosciuto — una fonte non è leggibile",
+  "tooltip.allQuiet": "Tutto tranquillo, niente ti aspetta",
+  "tooltip.summary": "{waiting} in attesa · {working} al lavoro · {idle} inattive",
+  "tooltip.unknown": "Non leggibile: {sources}",
+  "tooltip.starting": "Avvio…",
+  "menu.noSessions": "Niente ti aspetta (nessuna sessione attiva)",
+  "menu.openClaude": "Apri Claude",
+  "menu.flashOnRed": "Lampeggia nella barra delle applicazioni quando diventa rosso",
+  "menu.startWithSystem": "Avvia con il sistema",
+  "menu.language": "Lingua",
+  "menu.languageAuto": "Come il sistema",
+  "menu.quit": "Esci",
+  "reason.toast": "chat/Cowork",
+  "source.claudeCode": "Sessioni di Claude Code",
+  "source.claudeDesktopToasts": "Notifiche di Claude Desktop",
+  "source.error": "{source}: non leggibile ({detail})"
+}

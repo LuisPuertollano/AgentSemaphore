@@ -1,44 +1,114 @@
-# AgentSemaphore
+<p align="center">
+  <img src="docs/images/dot-red.png" width="40" alt="red dot">&nbsp;
+  <img src="docs/images/dot-orange.png" width="40" alt="orange dot">&nbsp;
+  <img src="docs/images/dot-green.png" width="40" alt="green dot">
+</p>
 
-> ⚠️ **Pre-alpha — testing stage.** This is an early, moving project: things will break, formats will change,
-> and it has only been tried on a handful of machines. Please do not rely on it yet.
+<h1 align="center">AgentSemaphore</h1>
+
+<p align="center">
+  <b>One dot next to your clock that tells you which AI agent needs you.</b><br>
+  Stop watching agent windows. Turn the notification noise off. Look at the dot.
+</p>
+
+<p align="center">
+  <a href="https://github.com/LuisPuertollano/AgentSemaphore/actions/workflows/ci.yml"><img src="https://github.com/LuisPuertollano/AgentSemaphore/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
+  <img src="https://img.shields.io/badge/status-pre--alpha-orange" alt="pre-alpha">
+  <img src="https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078d4" alt="Windows x64 and ARM64">
+  <img src="https://img.shields.io/badge/Linux%20%26%20macOS-in%20progress-lightgrey" alt="Linux and macOS in progress">
+</p>
+
+> [!WARNING]
+> **Pre-alpha — testing stage.** Things will break and formats will change. So far it has been tried on
+> only a handful of machines, so please do not rely on it yet.
 > **If you try it, you are warmly invited to help:** report what you see on your system, share findings about
 > agents' state files or notifications, or send a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-A tiny traffic light in your system tray that shows what your AI agents are doing —
-so you can stop watching their windows and turn off the notification noise.
+<p align="center">
+  <img src="docs/images/tray-demo.svg" width="720" alt="Illustration: the tray dot changes colour and its tooltip says who is waiting">
+</p>
+
+## The four colours
 
 | | Meaning |
 |---|---|
-| 🔴 | An agent is waiting for you (question, permission, approval) |
-| 🟠 | An agent is working and does not need you |
-| 🟢 | All quiet |
+| <img src="docs/images/dot-red.png" width="18"> **Red** | An agent is blocked **waiting for you**: a question, a permission, a plan to approve |
+| <img src="docs/images/dot-grey.png" width="18"> **Grey** | **Unknown.** A source could not be read, so a red might be hidden. It never pretends to be green |
+| <img src="docs/images/dot-orange.png" width="18"> **Orange** | An agent is **working** and does not need you |
+| <img src="docs/images/dot-green.png" width="18"> **Green** | **All quiet.** Nothing is waiting for you |
 
-**Status: pre-alpha. Windows prototype works; the cross-platform core is in progress.** Cross-platform (Linux, macOS) and more agents
-(Gemini CLI, Codex, Copilot CLI…) are planned — see [docs/ROADMAP.md](docs/ROADMAP.md).
+The worst state across all sessions wins. Hover for a summary, click for the list of sessions.
 
-## What it watches today
+## How it works
 
-- **Claude Code** — CLI and the Claude Desktop "Code" tab (red / orange / green).
-- **Claude chat, Cowork and scheduled tasks** in Claude Desktop — red when they need you.
+<p align="center">
+  <img src="docs/images/how-it-works.svg" width="760" alt="Diagram: read-only sources feed one aggregate state, shown as the tray dot">
+</p>
 
-## Try the Windows prototype
+- **Read-only.** It reads what the agents already write. It never changes an agent's settings and needs no hooks.
+- **Local and private.** No accounts, no servers, no telemetry. Nothing leaves your machine.
+- **Fails soft.** If a format changes upstream, the dot turns grey and the tooltip says which source; it never shows a wrong green.
 
-Install with [install/windows](install/windows/README.md) (per user, opt-in silencing of
-Claude's pop-ups, clean uninstall). Details of the prototype: [prototype/windows/README.md](prototype/windows/README.md).
+## What it can see — and what it cannot (yet)
 
-## Cross-platform core (in progress)
+| | Seen? | How |
+|---|---|---|
+| Claude Code, CLI and Desktop **Code** tab, on this machine | ✅ red / orange / green, live | Claude Code's own session files |
+| Claude **chat, Cowork, scheduled tasks** (Claude Desktop) | 🔴 only when they need you | Desktop's notifications (Windows) |
+| Claude Code **in the cloud** or **on another machine over SSH** | 🔴 when a turn ends (for now also when it only reports progress) | Desktop's notifications (Windows) |
+| …the same, while a question is open mid-turn | ❌ not yet | no local signal ([#22](https://github.com/LuisPuertollano/AgentSemaphore/issues/22), [#24](https://github.com/LuisPuertollano/AgentSemaphore/issues/24)) |
+| A session that ends its turn with a question in plain text | 🟢 shows idle | known gap ([#20](https://github.com/LuisPuertollano/AgentSemaphore/issues/20)) |
+| Gemini CLI, Codex CLI, Copilot CLI, … | ⏳ planned | [Phase 3](https://github.com/LuisPuertollano/AgentSemaphore/issues/4) |
 
-A single Go binary for Windows (x64, ARM64), Linux and macOS, no runtime needed. It already reads
-Claude Code sessions; Claude Desktop notifications follow.
+Everything measured so far, including what is broken upstream, is in [docs/FINDINGS.md](docs/FINDINGS.md).
+
+## Languages
+
+The tray speaks **English, Español, Deutsch, Français, Italiano, 中文 and हिन्दी**. By default it uses your
+system language. Better translations are very welcome: see [`internal/i18n/locales`](internal/i18n/locales).
+
+## Install
+
+### Windows (prototype, works today)
+
+Per user, no admin rights, PowerShell 7. Includes a clean uninstall and an optional "silence Claude's
+pop-ups but keep the dot working".
+
+```powershell
+pwsh -File install/windows/install.ps1 -Autostart -WhatIf   # see every change first
+pwsh -File install/windows/install.ps1 -Autostart
+```
+
+Details: [install/windows](install/windows/README.md). If the dot hides behind the **^** arrow next to the
+clock, drag it onto the taskbar.
+
+### Windows, Linux, macOS (Go core, in progress)
+
+One binary of about 4 MB with nothing else to install, built for Windows x64/ARM64, Linux x64/ARM64 and
+macOS. It already reads Claude Code sessions; Claude Desktop notifications come next. Every CI run uploads
+the binaries as artifacts. Releases will follow.
 
 ```sh
 go run ./cmd/agentsemaphore          # tray app
 go run ./cmd/agentsemaphore -once    # print the current state as JSON and exit
 ```
 
-CI builds the binaries on every push (artifacts on the workflow run).
+## Roadmap
+
+1. ✅ Harden the Windows prototype
+2. 🚧 Cross-platform core (Windows, Linux, macOS)
+3. ⏳ More agents (Gemini CLI, Codex CLI, Copilot CLI, …)
+4. ⏳ Optional view of your subscription usage, from local data only
+5. ⏳ Public release with a landing page
+
+Live tracking: [docs/ROADMAP.md](docs/ROADMAP.md) and the [issues](https://github.com/LuisPuertollano/AgentSemaphore/issues).
+
+## Contributing
+
+Testing on your own machine is one of the most useful things you can do right now. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT — free forever, no telemetry, no accounts.
+[MIT](LICENSE). Free forever, no telemetry, no accounts.

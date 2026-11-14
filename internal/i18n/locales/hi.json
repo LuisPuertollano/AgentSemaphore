@@ -1,0 +1,21 @@
+{
+  "state.red": "आपका इंतज़ार कर रहा है",
+  "state.orange": "काम कर रहा है",
+  "state.green": "सब शांत है",
+  "state.grey": "अज्ञात — एक स्रोत पढ़ा नहीं जा सका",
+  "tooltip.allQuiet": "सब शांत है, कुछ भी आपका इंतज़ार नहीं कर रहा",
+  "tooltip.summary": "{waiting} इंतज़ार में · {working} काम में · {idle} निष्क्रिय",
+  "tooltip.unknown": "पढ़ा नहीं जा सका: {sources}",
+  "tooltip.starting": "शुरू हो रहा है…",
+  "menu.noSessions": "कुछ भी आपका इंतज़ार नहीं कर रहा (कोई सक्रिय सत्र नहीं)",
+  "menu.openClaude": "Claude खोलें",
+  "menu.flashOnRed": "लाल होने पर टास्कबार में चमकाएँ",
+  "menu.startWithSystem": "सिस्टम के साथ शुरू करें",
+  "menu.language": "भाषा",
+  "menu.languageAuto": "सिस्टम के अनुसार",
+  "menu.quit": "बंद करें",
+  "reason.toast": "चैट/Cowork",
+  "source.claudeCode": "Claude Code सत्र",
+  "source.claudeDesktopToasts": "Claude Desktop सूचनाएँ",
+  "source.error": "{source}: पढ़ा नहीं जा सका ({detail})"
+}

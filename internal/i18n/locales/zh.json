@@ -1,0 +1,21 @@
+{
+  "state.red": "等待你的操作",
+  "state.orange": "工作中",
+  "state.green": "一切空闲",
+  "state.grey": "未知 — 有数据源无法读取",
+  "tooltip.allQuiet": "一切空闲，没有需要你处理的事",
+  "tooltip.summary": "{waiting} 个等待你 · {working} 个工作中 · {idle} 个空闲",
+  "tooltip.unknown": "无法读取：{sources}",
+  "tooltip.starting": "正在启动…",
+  "menu.noSessions": "没有需要你处理的事（无活动会话）",
+  "menu.openClaude": "打开 Claude",
+  "menu.flashOnRed": "变红时闪烁任务栏",
+  "menu.startWithSystem": "开机启动",
+  "menu.language": "语言",
+  "menu.languageAuto": "跟随系统",
+  "menu.quit": "退出",
+  "reason.toast": "聊天/Cowork",
+  "source.claudeCode": "Claude Code 会话",
+  "source.claudeDesktopToasts": "Claude Desktop 通知",
+  "source.error": "{source}：无法读取（{detail}）"
+}

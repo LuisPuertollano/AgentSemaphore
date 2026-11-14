@@ -1,4 +1,4 @@
-// Package i18n holds the UI strings in English, Spanish and German and picks
+// Package i18n holds the UI strings (en, es, de, fr, it, zh, hi) and picks
 // the language: the user's setting, else the OS UI language, else English.
 package i18n
 
