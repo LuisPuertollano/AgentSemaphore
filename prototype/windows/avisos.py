@@ -3,10 +3,15 @@
 # Lo usa semaforo.ps1. Solo lectura: nunca toca la base original.
 #
 # Salida (stdout, una linea JSON):
-#   {"ok": true, "avisos": [{"id", "epoch", "nombre", "textos", "tipo"}]}
+#   {"ok": true, "avisos": [{"id", "epoch", "nombre", "textos", "tipo", "origen", "silencioso"}]}
 #     tipo = "pide"        -> el texto coincide con una frase conocida de "te necesita"
 #            "desconocido" -> aviso de Claude con un texto que no esta en avisos-textos.json;
 #                             cuenta como rojo (mejor un rojo de mas que un verde falso)
+#   origen     = "nube"  -> aviso de una sesion de Claude Code en la nube (<header id="session-session_...">)
+#                "local" -> sesion de la pestana Code, local o por SSH (<header id="session-local_...">)
+#                ""      -> otro aviso (chat, Cowork, tareas)
+#   silencioso = el aviso trae <audio silent="true"/>. Visto solo en un resumen de turno que no
+#                pedia nada (2026-11-14); se registra para comprobarlo, todavia no cambia el color.
 #   Si algo falla: {"ok": false, "error": "..."} y codigo de salida 1.
 #
 # Variables para pruebas: AGENTSEMAPHORE_WPN_DIR (carpeta de la base),
@@ -46,9 +51,23 @@ def copiar_base():
     return os.path.join(tmp, 'wpndatabase.db')
 
 
-def textos_de(payload):
-    p = payload.decode('utf-8', 'replace') if isinstance(payload, bytes) else str(payload)
+def texto_payload(payload):
+    return payload.decode('utf-8', 'replace') if isinstance(payload, bytes) else str(payload)
+
+
+def textos_de(p):
     return [re.sub(r'<[^>]+>', '', x).strip() for x in re.findall(r'<text[^>]*>(.*?)</text>', p, re.S)]
+
+
+def origen_de(p):
+    m = re.search(r'<header\b[^>]*\bid="session-([a-z]+)_', p)
+    if not m:
+        return ''
+    return {'session': 'nube', 'local': 'local'}.get(m.group(1), m.group(1))
+
+
+def silencioso(p):
+    return re.search(r'<audio\b[^>]*\bsilent="true"', p) is not None
 
 
 def main():
@@ -71,7 +90,8 @@ def main():
         t = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=arr / 10)
         if t < limite:
             continue
-        textos = textos_de(payload)
+        p = texto_payload(payload)
+        textos = textos_de(p)
         if any(pide.search(x) for x in textos):
             tipo = 'pide'
         elif ignorar and any(ignorar.search(x) for x in textos):
@@ -82,7 +102,8 @@ def main():
         fijo = lambda x: pide.search(x) or (ignorar and ignorar.search(x))
         nombre = next((x for x in textos if x and not fijo(x)), textos[0] if textos else 'Claude')
         out.append({'id': nid, 'epoch': int((t - datetime.datetime(1970, 1, 1)).total_seconds()),
-                    'nombre': nombre, 'textos': textos, 'tipo': tipo})
+                    'nombre': nombre, 'textos': textos, 'tipo': tipo,
+                    'origen': origen_de(p), 'silencioso': silencioso(p)})
     print(json.dumps({'ok': True, 'avisos': out}, ensure_ascii=True))
 
 

@@ -64,6 +64,9 @@ Check (@(Read-Sesiones $dir $vivos).Count -eq 0) 'no sessions folder -> nothing 
 # avisos.py output
 $ok = ConvertFrom-AvisosSalida '{"ok":true,"avisos":[{"id":7,"epoch":1794657600,"nombre":"Chat","textos":["Chat","x"],"tipo":"pide"}]}' 0
 Check ($ok.Ok -and $ok.Avisos.Count -eq 1 -and $ok.Avisos[0].Nombre -eq 'Chat') 'avisos ok parsed'
+Check ((-not $ok.Avisos[0].Origen) -and (-not $ok.Avisos[0].Silencioso)) 'old output without origen/silencioso still parses'
+$ses = ConvertFrom-AvisosSalida '{"ok":true,"avisos":[{"id":8,"epoch":1794657600,"nombre":"S","textos":["S","y"],"tipo":"desconocido","origen":"nube","silencioso":true}]}' 0
+Check ($ses.Avisos[0].Origen -eq 'nube' -and $ses.Avisos[0].Silencioso) 'origen and silencioso parsed'
 $empty = ConvertFrom-AvisosSalida '{"ok":true,"avisos":[]}' 0
 Check ($empty.Ok -and $empty.Avisos.Count -eq 0) 'empty list parsed'
 $err = ConvertFrom-AvisosSalida '{"ok":false,"error":"OperationalError: no such table: Notification"}' 1

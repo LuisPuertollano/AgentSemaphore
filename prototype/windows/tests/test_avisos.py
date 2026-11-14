@@ -20,9 +20,10 @@ def filetime(dt):
     return int((dt - datetime.datetime(1601, 1, 1)).total_seconds() * 10_000_000)
 
 
-def payload(*texts):
+def payload(*texts, header='', silent=False):
     body = ''.join('<text>%s</text>' % t for t in texts)
-    return ('<toast launch="x"><visual><binding template="ToastGeneric">%s</binding></visual></toast>' % body).encode()
+    audio = '<audio silent="true"/>' if silent else ''
+    return ('<toast>%s<visual><binding template="ToastGeneric">%s</binding></visual>%s</toast>' % (header, body, audio)).encode()
 
 
 class AvisosTest(unittest.TestCase):
@@ -41,9 +42,10 @@ class AvisosTest(unittest.TestCase):
         self.db.close()
         self.tmp.cleanup()
 
-    def add(self, *texts, handler=1, minutes_ago=5, kind='toast'):
+    def add(self, *texts, handler=1, minutes_ago=5, kind='toast', header='', silent=False):
         self.db.execute('insert into Notification values (?, ?, ?, ?, ?)',
-                        (self.next_id, handler, kind, filetime(NOW - datetime.timedelta(minutes=minutes_ago)), payload(*texts)))
+                        (self.next_id, handler, kind, filetime(NOW - datetime.timedelta(minutes=minutes_ago)),
+                         payload(*texts, header=header, silent=silent)))
         self.db.commit()
         self.next_id += 1
 
@@ -105,6 +107,21 @@ class AvisosTest(unittest.TestCase):
                 self.assertEqual(got.get(name), 'pide', name)
             else:
                 self.assertNotIn(name, got, name)
+
+    def test_code_session_toasts_report_origin_and_silence(self):
+        # Shapes seen on 2026-11-14 (titles and ids made up): turn-end summaries of Code sessions.
+        self.add('Cloud session', 'please confirm step 4',
+                 header='<header id="session-session_01ABC" title="Cloud session" arguments=""/>')
+        self.add('Local session', 'deleted three containers; backups kept',
+                 header='<header id="session-local_5ad85bbc-0000" title="Local session" arguments=""/>', silent=True)
+        self.add('Some chat', 'Claude necesita tu respuesta para continuar')
+        rc, out = self.run_avisos()
+        self.assertEqual(rc, 0)
+        got = {a['nombre']: (a['tipo'], a['origen'], a['silencioso']) for a in out['avisos']}
+        self.assertEqual(got['Cloud session'], ('desconocido', 'nube', False))
+        # Still red (desconocido) for now: silence is only recorded, not trusted yet.
+        self.assertEqual(got['Local session'], ('desconocido', 'local', True))
+        self.assertEqual(got['Some chat'], ('pide', '', False))
 
     def test_missing_database_is_an_error(self):
         os.remove(os.path.join(self.src, 'wpndatabase.db'))
