@@ -8,7 +8,7 @@ Claude Desktop chat/Cowork source). Tested on Windows 11 ARM64.
 ```powershell
 $dir = "$env:LOCALAPPDATA\SemaforoClaude"
 New-Item -ItemType Directory $dir -Force | Out-Null
-Copy-Item .\semaforo.ps1, .\avisos.py $dir
+Copy-Item .\semaforo.ps1, .\estado.ps1, .\avisos.py, .\avisos-textos.json $dir
 # start now, with no console window
 Start-Process conhost.exe "--headless pwsh.exe -NoProfile -ExecutionPolicy Bypass -File `"$dir\semaforo.ps1`""
 ```
@@ -32,7 +32,12 @@ Undo: `Remove-ItemProperty $k ShowBanner, SoundFile`.
 ## Files
 
 - `semaforo.ps1` — tray app (WinForms NotifyIcon), polls once per second.
-- `avisos.py` — reads a copy of the Windows notification DB and returns Claude toasts that ask for you.
+- `estado.ps1` — the logic without UI: colours, session files, parsing `avisos.py` output (tested in CI).
+- `avisos.py` — reads a copy of the Windows notification DB and returns Claude toasts that may need you.
+- `avisos-textos.json` — known toast phrases per language (`pide` = needs you, `ignorar` = does not).
+
+Grey dot = a source cannot be read (Python missing, notification DB format changed, unreadable or
+unknown session file). Priority: red > grey > orange > green. The tooltip says which source.
 - `cambios.log` (created at runtime) — one line per colour change with the reason.
 
 ## Uninstall

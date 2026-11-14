@@ -18,7 +18,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
@@ -34,11 +34,22 @@ jobs:
     if: ${{ !github.event.repository.private }}
     runs-on: windows-11-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
       - run: go test ./...
+
+  prototype:
+    name: Prototype logic (Python + PowerShell)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: avisos.py against a synthetic notification DB
+        run: python3 -m unittest discover -s prototype/windows/tests -v
+      - name: estado.ps1 (colours, session files, avisos output)
+        shell: pwsh
+        run: ./prototype/windows/tests/test-estado.ps1
 
   installer:
     name: Windows installer (end-to-end)
@@ -47,7 +58,7 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Parse every PowerShell script
         run: |
           $bad = 0
@@ -60,8 +71,10 @@ jobs:
       - name: PSScriptAnalyzer (errors only)
         run: |
           if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) { Install-Module PSScriptAnalyzer -Scope CurrentUser -Force }
-          $r = Invoke-ScriptAnalyzer -Path install/windows -Recurse -Severity Error
+          $r = @('install/windows', 'prototype/windows', 'tools/windows') | ForEach-Object { Invoke-ScriptAnalyzer -Path $_ -Recurse -Severity Error }
           $r | Format-Table -AutoSize
           if ($r) { exit 1 }
       - name: Install, re-install, uninstall
         run: ./install/windows/test-installer.ps1
+      - name: estado.ps1 on Windows
+        run: ./prototype/windows/tests/test-estado.ps1

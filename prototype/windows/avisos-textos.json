@@ -1,0 +1,20 @@
+{
+  "_comentario": "Frases (regex, sin distinguir mayusculas) de los avisos de Claude Desktop. 'pide' = te necesita (rojo). 'ignorar' = no te necesita. Un aviso de Claude que no coincide con ninguna cuenta como rojo y se apunta en cambios.log para anadirlo aqui. 'verificado' dice si las frases se han visto en un Windows real con ese idioma.",
+  "idiomas": {
+    "es": {
+      "verificado": true,
+      "pide": ["necesita tu (respuesta|aprobaci)", "esperando tu respuesta"],
+      "ignorar": ["tarea programada completada"]
+    },
+    "en": {
+      "verificado": false,
+      "pide": ["needs your (response|input|approval)", "waiting for your"],
+      "ignorar": ["scheduled task (completed|finished)"]
+    },
+    "de": {
+      "verificado": false,
+      "pide": ["wartet auf", "ben.tigt deine"],
+      "ignorar": ["geplante aufgabe (abgeschlossen|erledigt)"]
+    }
+  }
+}

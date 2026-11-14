@@ -44,7 +44,7 @@ $ErrorActionPreference = 'Stop'
 
 $Source = [IO.Path]::GetFullPath($Source)
 $InstallDir = [IO.Path]::GetFullPath($InstallDir)
-$payload = @('semaforo.ps1', 'avisos.py')
+$payload = @('semaforo.ps1', 'estado.ps1', 'avisos.py', 'avisos-textos.json')
 foreach ($f in $payload) {
   if (-not (Test-Path -LiteralPath (Join-Path $Source $f))) { throw "Missing $f in $Source" }
 }
@@ -151,4 +151,6 @@ if (-not $NoStart) {
     Start-Process -FilePath (Join-Path $env:windir 'System32\conhost.exe') -ArgumentList $launchArgs -WorkingDirectory $InstallDir
   }
 }
-Write-Host "AgentSemaphore installed in $InstallDir. To uninstall: pwsh -File `"$(Join-Path $InstallDir 'uninstall.ps1')`""
+if (-not $WhatIfPreference) {
+  Write-Host "AgentSemaphore installed in $InstallDir. To uninstall: pwsh -File `"$(Join-Path $InstallDir 'uninstall.ps1')`""
+}

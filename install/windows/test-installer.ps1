@@ -39,7 +39,7 @@ Check ((Get-Val $key ShowBanner) -eq 1) 'WhatIf: ShowBanner untouched'
 
 # 2. Real install.
 & $install -InstallDir $dir -Autostart -SilentNotifications -NoStart
-foreach ($f in 'semaforo.ps1', 'avisos.py', 'uninstall.ps1', 'common.ps1', $ManifestName, 'notification-backup.json') {
+foreach ($f in 'semaforo.ps1', 'estado.ps1', 'avisos.py', 'avisos-textos.json', 'uninstall.ps1', 'common.ps1', $ManifestName, 'notification-backup.json') {
   Check (Test-Path (Join-Path $dir $f)) "installed $f"
 }
 Check (Test-Path $lnk) 'autostart shortcut created'
