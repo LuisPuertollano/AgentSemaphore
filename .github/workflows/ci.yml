@@ -50,6 +50,9 @@ jobs:
       - name: estado.ps1 (colours, session files, avisos output)
         shell: pwsh
         run: ./prototype/windows/tests/test-estado.ps1
+      - name: verify-lib.ps1 (string search, session snapshot)
+        shell: pwsh
+        run: ./tools/windows/tests/test-verify-lib.ps1
 
   installer:
     name: Windows installer (end-to-end)

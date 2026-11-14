@@ -1,5 +1,25 @@
 # Verification on a real Windows machine (Phase 1, points A and B)
 
+## Quick way: one script
+
+`tools/windows/verify-phase1.ps1` does most of it automatically and writes one report
+(`%USERPROFILE%\agentsemaphore-verify.md`, also copied to the clipboard):
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools\windows\verify-phase1.ps1            # toast texts + CLI
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools\windows\verify-phase1.ps1 -Desktop   # + guided Code-tab steps
+```
+
+- **Toast texts:** read from the installed Claude Desktop package in every language it ships.
+  No need to switch the app's language.
+- **CLI:** short sessions open in new windows and close by themselves.
+- **Code tab:** cannot be driven from outside (no UI Automation tree). With `-Desktop`, the script
+  puts each prompt in the clipboard; you paste it and answer when told.
+
+The manual steps below are the fallback.
+
+## Manual steps
+
 Both tools are read-only. They never write to Claude's files or to the notification database.
 Results go into `docs/FINDINGS.md`. Before publishing, remove conversation titles.
 
