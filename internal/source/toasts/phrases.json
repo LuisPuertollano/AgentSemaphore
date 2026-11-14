@@ -1,0 +1,71 @@
+{
+  "_comentario": "Frases (regex, sin distinguir mayusculas) de los avisos de Claude Desktop. 'pide' = te necesita (rojo). 'ignorar' = no te necesita. Un aviso de Claude que no coincide con ninguna cuenta como rojo y se apunta en cambios.log. 'verificado': 'aviso real' = visto en un aviso real de Windows; 'paquete' = texto sacado del paquete de Claude Desktop 5.11492.5.0 (2026-11-14). 'ejemplos' son los textos exactos del paquete; los tests comprueban que encajan. Algunos avisos salen en ingles aunque la app este en espanol (acceso a carpetas, limite de uso); van en 'en'.",
+  "idiomas": {
+    "es": {
+      "verificado": "aviso real",
+      "pide": [
+        "necesita tu (respuesta|aprobaci)",
+        "esperando tu respuesta"
+      ],
+      "ignorar": [
+        "tarea programada completada",
+        "disponible desde tus otros dispositivos"
+      ],
+      "ejemplos": {
+        "pide": [
+          "Claude necesita tu respuesta para continuar",
+          "Claude está esperando tu respuesta",
+          "La tarea programada necesita tu aprobación"
+        ],
+        "ignorar": [
+          "Tarea programada completada",
+          "“agentsemaphore-verify-work” ya está disponible desde tus otros dispositivos"
+        ]
+      }
+    },
+    "en": {
+      "verificado": "paquete",
+      "pide": [
+        "needs your (response|input|approval)",
+        "waiting for your",
+        "would like access to",
+        "hit your .* limit"
+      ],
+      "ignorar": [
+        "scheduled task (completed|finished)"
+      ],
+      "ejemplos": {
+        "pide": [
+          "Claude needs your input to continue",
+          "Claude is waiting for your input",
+          "Scheduled task needs your approval",
+          "Claude would like access to a folder",
+          "You've hit your Fable limit · resets Nov 15, 9pm (UTC). Switch to another model to continue."
+        ],
+        "ignorar": [
+          "Scheduled task completed"
+        ]
+      }
+    },
+    "de": {
+      "verificado": "paquete",
+      "pide": [
+        "wartet auf",
+        "ben.tigt deine"
+      ],
+      "ignorar": [
+        "geplante aufgabe (abgeschlossen|erledigt)"
+      ],
+      "ejemplos": {
+        "pide": [
+          "Claude benötigt deine Eingabe, um fortzufahren",
+          "Claude wartet auf deine Eingabe",
+          "Geplante Aufgabe benötigt deine Genehmigung"
+        ],
+        "ignorar": [
+          "Geplante Aufgabe abgeschlossen"
+        ]
+      }
+    }
+  }
+}
