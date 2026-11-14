@@ -115,6 +115,10 @@ func buildSources(s config.Settings, logger *log.Logger) []source.Source {
 		ts := &toasts.Source{P: toasts.NewPlatform()}
 		if logger != nil {
 			ts.OnUnknown = func(t toasts.Stored, i toasts.Info) {
+				if i.Kind == toasts.Progress {
+					logger.Printf("silent Code-session summary (not red): %s", i)
+					return
+				}
 				logger.Printf("unrecognised Claude notification (counts as red): %s", i)
 			}
 		}

@@ -31,7 +31,8 @@ type Platform interface {
 type Source struct {
 	P   Platform
 	Now func() time.Time
-	// OnUnknown is called once per unrecognised toast, so the caller can log it.
+	// OnUnknown is called once per unrecognised (red) or progress (not red)
+	// toast, so the caller can log it and a misclassification shows up.
 	OnUnknown func(Stored, Info)
 
 	mu         sync.Mutex
@@ -92,13 +93,13 @@ func (s *Source) Poll() source.Result {
 
 	for _, t := range s.cached {
 		info := Classify(t.Payload)
-		if info.Kind == Unknown && !s.reported[t.ID] {
+		if (info.Kind == Unknown || info.Kind == Progress) && !s.reported[t.ID] {
 			s.reported[t.ID] = true
 			if s.OnUnknown != nil {
 				s.OnUnknown(t, info)
 			}
 		}
-		if info.Kind == Ignored || !t.Arrival.After(s.lastSeen) {
+		if info.Kind == Ignored || info.Kind == Progress || !t.Arrival.After(s.lastSeen) {
 			continue
 		}
 		detail := "chat/Cowork"

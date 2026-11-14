@@ -68,8 +68,14 @@ func TestOriginSilenceAndName(t *testing.T) {
 		t.Errorf("cloud: %+v", i)
 	}
 	i = Classify(toastXML(`<header id="session-local_5ad8" title="Local" arguments=""/>`, true, "Local", "done, nothing to do"))
-	if i.Origin != OriginLocal || !i.Silent {
-		t.Errorf("local: %+v", i)
+	if i.Origin != OriginLocal || !i.Silent || i.Kind != Progress {
+		t.Errorf("silent Code-session summary should be progress: %+v", i)
+	}
+	if k := Classify(toastXML("", true, "App", "something new")).Kind; k != Unknown {
+		t.Errorf("silent toast without a session header must stay unknown (red), got %s", k)
+	}
+	if k := Classify(toastXML(`<header id="session-local_1"/>`, true, "S", "Claude needs your input to continue")).Kind; k != NeedsYou {
+		t.Errorf("a known needs-you phrase wins over silence, got %s", k)
 	}
 	i = Classify(toastXML("", false, "My chat &amp; co", "Claude necesita tu respuesta para continuar"))
 	if i.Kind != NeedsYou || i.Name != "My chat & co" || i.Origin != OriginOther {
@@ -106,18 +112,19 @@ func TestSourceRedUntilSeen(t *testing.T) {
 		{Toast{1, toastXML("", false, "Chat A", "Claude needs your input to continue")}, clock.Add(-10 * time.Second)},
 		{Toast{2, toastXML("", false, "Scheduled task completed", "Daily")}, clock.Add(-5 * time.Second)},
 		{Toast{3, toastXML(`<header id="session-session_x"/>`, false, "Cloud", "confirm step 4")}, clock.Add(-2 * time.Second)},
-		{Toast{4, toastXML("", false, "Old", "Claude needs your input to continue")}, clock.Add(-2 * time.Hour)}, // before start
+		{Toast{5, toastXML(`<header id="session-session_x"/>`, true, "Cloud", "PR merged")}, clock.Add(-time.Second)}, // progress: not red
+		{Toast{4, toastXML("", false, "Old", "Claude needs your input to continue")}, clock.Add(-2 * time.Hour)},      // before start
 	}
 	p.changed = true
 	r := s.Poll()
 	if len(r.Sessions) != 2 || r.Sessions[0].State != state.Red {
 		t.Fatalf("want 2 red (Chat A, Cloud), got %+v", r.Sessions)
 	}
-	if len(unknown) != 1 || unknown[0] != "Cloud" {
-		t.Fatalf("unknown reported: %v", unknown)
+	if len(unknown) != 2 || unknown[0] != "Cloud" || unknown[1] != "Cloud" {
+		t.Fatalf("unknown and progress toasts should both be reported: %v", unknown)
 	}
-	s.Poll() // unknown toasts are reported once only
-	if len(unknown) != 1 {
+	s.Poll() // reported once only
+	if len(unknown) != 2 {
 		t.Fatalf("unknown reported twice: %v", unknown)
 	}
 

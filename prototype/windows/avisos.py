@@ -5,13 +5,14 @@
 # Salida (stdout, una linea JSON):
 #   {"ok": true, "avisos": [{"id", "epoch", "nombre", "textos", "tipo", "origen", "silencioso"}]}
 #     tipo = "pide"        -> el texto coincide con una frase conocida de "te necesita"
-#            "desconocido" -> aviso de Claude con un texto que no esta en avisos-textos.json;
-#                             cuenta como rojo (mejor un rojo de mas que un verde falso)
+#            "info"        -> resumen de fin de turno de una sesion Code que llega en silencio:
+#                             solo informa, no cuenta como rojo (5 de 5 casos medidos, FINDINGS §3)
+#            "desconocido" -> cualquier otro aviso de Claude con un texto que no esta en
+#                             avisos-textos.json; cuenta como rojo (mejor un rojo de mas que un verde falso)
 #   origen     = "nube"  -> aviso de una sesion de Claude Code en la nube (<header id="session-session_...">)
 #                "local" -> sesion de la pestana Code, local o por SSH (<header id="session-local_...">)
 #                ""      -> otro aviso (chat, Cowork, tareas)
-#   silencioso = el aviso trae <audio silent="true"/>. Visto solo en un resumen de turno que no
-#                pedia nada (2026-11-14); se registra para comprobarlo, todavia no cambia el color.
+#   silencioso = el aviso trae <audio silent="true"/>.
 #   Si algo falla: {"ok": false, "error": "..."} y codigo de salida 1.
 #
 # Variables para pruebas: AGENTSEMAPHORE_WPN_DIR (carpeta de la base),
@@ -92,10 +93,13 @@ def main():
             continue
         p = texto_payload(payload)
         textos = textos_de(p)
+        origen, mudo = origen_de(p), silencioso(p)
         if any(pide.search(x) for x in textos):
             tipo = 'pide'
         elif ignorar and any(ignorar.search(x) for x in textos):
             continue
+        elif origen and mudo:
+            tipo = 'info'
         else:
             tipo = 'desconocido'
         # El nombre es el texto que NO es una frase fija del aviso
@@ -103,7 +107,7 @@ def main():
         nombre = next((x for x in textos if x and not fijo(x)), textos[0] if textos else 'Claude')
         out.append({'id': nid, 'epoch': int((t - datetime.datetime(1970, 1, 1)).total_seconds()),
                     'nombre': nombre, 'textos': textos, 'tipo': tipo,
-                    'origen': origen_de(p), 'silencioso': silencioso(p)})
+                    'origen': origen, 'silencioso': mudo})
     print(json.dumps({'ok': True, 'avisos': out}, ensure_ascii=True))
 
 

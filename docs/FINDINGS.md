@@ -132,11 +132,20 @@ matches no known phrase counts as red (better a red too many than a wrong green)
 - These toasts carry language-independent markers in the payload:
   - `<header id="session-session_<id>" title="<session title>">` → a **cloud** session;
   - `<header id="session-local_<uuid>" …>` → a **Code-tab session, local or over SSH**.
-- `<audio silent="true"/>` appeared only on a summary that asked for nothing (one sample). The summaries that
-  needed attention, and a safeguards notice, were not silent. **Hypothesis, not yet confirmed:**
-  silent = informational. Until confirmed, every unrecognised Claude toast still counts as red, and the
-  prototype logs origin and silence so the hypothesis can be checked
-  ([issue #22](https://github.com/LuisPuertollano/AgentSemaphore/issues/22)).
+- **Silence marks summaries that need nothing.** Every end-of-turn summary is either "what I did" or "what
+  I need from you". Desktop posts the first kind with `<audio silent="true"/>`. Samples from 2026-11-14:
+
+  | Summary (paraphrased) | Origin | Silent | Needed the user |
+  |---|---|---|---|
+  | "confirm step 4 (the reinstall)" | cloud | no | yes |
+  | "deleted three containers; backups kept" | local | yes | no |
+  | "phase 1 applied on a container: 4 cores…" | local | yes | no |
+  | "PR merged; no open PRs being watched" | cloud | yes | no |
+  | "safeguards flagged this session" | local | no | a safety notice |
+
+  **Rule adopted (5 of 5 consistent):** a silent toast with a Code-session header does not count as red.
+  A known "needs you" phrase still wins, and any other unrecognised Claude toast is still red. Each silent
+  summary is logged, so a misclassification would show up ([issue #22](https://github.com/LuisPuertollano/AgentSemaphore/issues/22)).
 - So cloud and SSH sessions are partly visible: when a turn ends (including turns that end with a question in
   plain text, #20), not while a permission or question dialog is open mid-turn.
 

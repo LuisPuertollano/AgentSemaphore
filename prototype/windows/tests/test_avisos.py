@@ -119,9 +119,19 @@ class AvisosTest(unittest.TestCase):
         self.assertEqual(rc, 0)
         got = {a['nombre']: (a['tipo'], a['origen'], a['silencioso']) for a in out['avisos']}
         self.assertEqual(got['Cloud session'], ('desconocido', 'nube', False))
-        # Still red (desconocido) for now: silence is only recorded, not trusted yet.
-        self.assertEqual(got['Local session'], ('desconocido', 'local', True))
+        # A silent end-of-turn summary of a Code session only informs.
+        self.assertEqual(got['Local session'], ('info', 'local', True))
         self.assertEqual(got['Some chat'], ('pide', '', False))
+
+    def test_silence_only_counts_for_code_sessions(self):
+        # A silent toast without a Code-session header is still an unknown (red),
+        # and a known "needs you" phrase stays red even when silent.
+        self.add('Some app notice', 'something new', silent=True)
+        self.add('Session', 'Claude needs your input to continue',
+                 header='<header id="session-local_1" title="Session"/>', silent=True)
+        rc, out = self.run_avisos()
+        got = {a['nombre']: a['tipo'] for a in out['avisos']}
+        self.assertEqual(got, {'Some app notice': 'desconocido', 'Session': 'pide'})
 
     def test_missing_database_is_an_error(self):
         os.remove(os.path.join(self.src, 'wpndatabase.db'))
