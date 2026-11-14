@@ -21,7 +21,7 @@ getting spammed by notifications.
 
 - Always work on a branch and open a pull request; never push to `main` directly.
 - **Auto-merge (approved by Luis, 2026-11-14):** when every CI check on a PR you opened is green
-  (skipped jobs such as `windows-11-arm` on a private repo are fine) and it has no merge conflict,
+  (the repo is public since 2026-11-14, so `windows-11-arm` must run and pass too) and it has no merge conflict,
   mark it ready and merge it without asking. Use a merge commit so per-step commits stay visible.
   Never merge with a red, pending or cancelled check, and never skip or disable a test to get green.
 - After merging, report what was merged, which issues closed and what still needs testing on a real machine.
@@ -37,7 +37,9 @@ getting spammed by notifications.
 ## Current state
 
 `prototype/windows/` is a **working** Windows prototype (PowerShell + a small Python helper),
-installed and verified on Luis's laptop on 2026-11-14. Read `docs/FINDINGS.md` before changing
+installed and verified on Luis's laptop on 2026-11-14. The cross-platform Go core (`cmd/`, `internal/`)
+reads Claude Code sessions and has run on the Windows ARM64 laptop (`-once`); its tray UI is not yet
+tested on a real desktop. Read `docs/FINDINGS.md` before changing
 any detection logic — it records what was measured and what is known to be broken upstream.
 
 ## Roadmap
@@ -50,7 +52,7 @@ Linux/macOS, (3) more agents (Gemini CLI, Codex, Copilot CLI…), (4) subscripti
 
 - Keep detection sources pluggable: one module per source (Claude Code session files,
   Claude Desktop notifications, hooks of other CLIs…). The tray/menu UI only aggregates.
-- Worst state wins across sessions: red > orange > green.
+- Worst state wins across sessions: red > grey > orange > green (grey = a source cannot be read).
 - Read-only towards the agents: never modify an agent's own config without the user asking.
   If hooks are needed, install them additively and make uninstall remove only ours.
 - Undocumented data sources (session files, notification DB) must fail soft: if the format
