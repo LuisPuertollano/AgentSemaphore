@@ -5,6 +5,9 @@
 // Rules, shared with the Windows prototype (prototype/windows/avisos.py):
 //   - a toast whose text matches a known "needs you" phrase is red;
 //   - one matching a known "does not need you" phrase is ignored;
+//   - a silent end-of-turn summary of a Claude Code session (a toast with a
+//     <header id="session-..."> and <audio silent="true"/>) only informs and
+//     is not red (5 of 5 samples, docs/FINDINGS.md §3);
 //   - any other Claude toast is red too (better a red too many than a wrong
 //     green) and is reported as unknown so it can be added to the table;
 //   - a toast stops counting once Claude Desktop has been in the foreground
@@ -30,9 +33,10 @@ var phrasesJSON []byte
 type Kind string
 
 const (
-	NeedsYou Kind = "needs"   // known phrase that needs the user
-	Ignored  Kind = "ignored" // known phrase that does not
-	Unknown  Kind = "unknown" // a Claude toast we have not seen before: counts as red
+	NeedsYou Kind = "needs"    // known phrase that needs the user
+	Ignored  Kind = "ignored"  // known phrase that does not
+	Unknown  Kind = "unknown"  // a Claude toast we have not seen before: counts as red
+	Progress Kind = "progress" // silent end-of-turn summary of a Code session: not red
 )
 
 // Origin of a toast, from its <header id="session-...">.
@@ -56,7 +60,7 @@ type Info struct {
 	Name   string   // the text that is not a fixed phrase: chat or session title
 	Texts  []string // all <text> lines
 	Origin Origin
-	Silent bool // <audio silent="true"/>: so far seen only on summaries that needed nothing
+	Silent bool // <audio silent="true"/>
 }
 
 type phrases struct {
@@ -146,6 +150,8 @@ func (p phrases) classify(payload string) Info {
 		info.Kind = NeedsYou
 	case anyMatch(p.ignore):
 		info.Kind = Ignored
+	case info.Origin != OriginOther && info.Silent:
+		info.Kind = Progress
 	default:
 		info.Kind = Unknown
 	}
