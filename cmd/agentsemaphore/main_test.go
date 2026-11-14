@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/LuisPuertollano/AgentSemaphore/internal/aggregate"
+
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/state"
 )
@@ -49,5 +51,24 @@ func TestASCIIJSONRoundTrips(t *testing.T) {
 	}
 	if back["tooltip"] != in["tooltip"] || back["name"] != in["name"] {
 		t.Fatalf("round trip changed text: %v", back)
+	}
+}
+
+func TestMenuRowsShowEachSourceAndWhatIsNotVisible(t *testing.T) {
+	v := aggregate.Build([]source.Result{
+		{Source: "claudeCode", Sessions: []source.Session{{Name: "api", State: state.Red, Detail: "permission prompt"}}},
+		{Source: "claudeDesktopToasts"},
+	}, "en")
+	got := strings.Join(menuRows(v), "\n")
+	for _, want := range []string{
+		"■ Claude Code sessions",
+		"🔴  api  (permission prompt)",
+		"■ Claude Desktop notifications (shows only what needs you)",
+		"    nothing pending",
+		"ⓘ Not visible:",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("menu misses %q:\n%s", want, got)
+		}
 	}
 }

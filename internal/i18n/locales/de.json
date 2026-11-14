@@ -3,7 +3,7 @@
   "state.orange": "Arbeitet",
   "state.green": "Alles ruhig",
   "state.grey": "Unbekannt — eine Quelle ist nicht lesbar",
-  "tooltip.allQuiet": "Alles ruhig, nichts wartet auf dich",
+  "tooltip.allQuiet": "Alles ruhig auf diesem PC, nichts wartet auf dich",
   "tooltip.summary": "{waiting} warten · {working} arbeiten · {idle} im Leerlauf",
   "tooltip.unknown": "Nicht lesbar: {sources}",
   "tooltip.starting": "Wird gestartet…",
@@ -17,5 +17,9 @@
   "reason.toast": "Chat/Cowork",
   "source.claudeCode": "Claude-Code-Sitzungen",
   "source.claudeDesktopToasts": "Claude-Desktop-Benachrichtigungen",
-  "source.error": "{source}: nicht lesbar ({detail})"
+  "source.error": "{source}: nicht lesbar ({detail})",
+  "menu.sourceNothing": "nichts offen",
+  "menu.sourceAbsent": "auf diesem System nicht gefunden",
+  "menu.toastsRedOnly": "zeigt nur, was dich braucht",
+  "menu.notVisible": "Nicht sichtbar: Cloud-Sitzungen mit offenem Dialog, andere Rechner"
 }

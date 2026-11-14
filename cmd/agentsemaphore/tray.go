@@ -4,25 +4,55 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"sync/atomic"
 	"time"
 
 	"fyne.io/systray"
 
 	"github.com/LuisPuertollano/AgentSemaphore/internal/aggregate"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/autostart"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/config"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/desktop"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/i18n"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/icon"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/state"
 )
 
-// maxMenuSessions is how many sessions the menu lists; the rest are summarised.
-const maxMenuSessions = 12
+// maxMenuRows is how many lines the status part of the menu can show
+// (group titles, sessions, notes); the rest are summarised as "+N".
+const maxMenuRows = 24
+
+// menuRows turns the view into the status lines of the menu: one block per
+// source (title, then its sessions or a note), and finally what no source sees.
+func menuRows(v aggregate.View) []string {
+	var rows []string
+	for _, g := range v.Groups {
+		rows = append(rows, "■ "+g.Title)
+		for _, s := range g.Sessions {
+			label := fmt.Sprintf("    %s  %s", dots[s.State], s.Name)
+			if s.Detail != "" && (s.State == state.Red || s.State == state.Grey) {
+				label += "  (" + s.Detail + ")"
+			}
+			rows = append(rows, label)
+		}
+		if g.Note != "" && len(g.Sessions) == 0 {
+			rows = append(rows, "    "+g.Note)
+		}
+	}
+	if v.NotVisible != "" {
+		rows = append(rows, "ⓘ "+v.NotVisible)
+	}
+	return rows
+}
 
 type trayConfig struct {
-	sources  []source.Source
-	lang     string
-	interval time.Duration
-	log      *log.Logger
+	sources      []source.Source
+	lang         string
+	interval     time.Duration
+	log          *log.Logger
+	settings     config.Settings
+	settingsPath string
 }
 
 var dots = map[state.State]string{state.Red: "🔴", state.Orange: "🟠", state.Green: "🟢", state.Grey: "⚪"}
@@ -44,7 +74,7 @@ func onReady(cfg trayConfig) {
 	systray.SetIcon(iconBytes(state.Grey))
 	systray.SetTooltip("AgentSemaphore: " + T("tooltip.starting"))
 
-	items := make([]*systray.MenuItem, maxMenuSessions)
+	items := make([]*systray.MenuItem, maxMenuRows)
 	for i := range items {
 		items[i] = systray.AddMenuItem("", "")
 		items[i].Disable()
@@ -53,8 +83,61 @@ func onReady(cfg trayConfig) {
 	more := systray.AddMenuItem("", "")
 	more.Disable()
 	more.Hide()
-	none := systray.AddMenuItem(T("menu.noSessions"), "")
-	none.Disable()
+	systray.AddSeparator()
+
+	openClaude := func() {
+		if err := desktop.OpenClaude(); err != nil {
+			cfg.log.Printf("open Claude: %v", err)
+		}
+	}
+	if desktop.CanOpenClaude() {
+		open := systray.AddMenuItem(T("menu.openClaude"), "")
+		go func() {
+			for range open.ClickedCh {
+				openClaude()
+			}
+		}()
+		systray.SetOnTapped(openClaude) // left click opens Claude, right click shows the menu
+	}
+	var flashOn atomic.Bool // read by the refresh loop, written by the menu
+	flashOn.Store(cfg.settings.FlashOnRed)
+	if desktop.CanFlash() {
+		flash := systray.AddMenuItemCheckbox(T("menu.flashOnRed"), "", flashOn.Load())
+		go func() {
+			for range flash.ClickedCh {
+				on := !flashOn.Load()
+				flashOn.Store(on)
+				if on {
+					flash.Check()
+				} else {
+					flash.Uncheck()
+				}
+				cfg.settings.FlashOnRed = on
+				if err := config.Save(cfg.settingsPath, cfg.settings); err != nil {
+					cfg.log.Printf("save settings: %v", err)
+				}
+			}
+		}()
+	}
+	auto := systray.AddMenuItemCheckbox(T("menu.startWithSystem"), "", autostart.Enabled())
+	go func() {
+		for range auto.ClickedCh {
+			var err error
+			if autostart.Enabled() {
+				err = autostart.Disable()
+			} else {
+				err = autostart.Enable("")
+			}
+			if err != nil {
+				cfg.log.Printf("autostart: %v", err)
+			}
+			if autostart.Enabled() {
+				auto.Check()
+			} else {
+				auto.Uncheck()
+			}
+		}
+	}()
 	systray.AddSeparator()
 	quit := systray.AddMenuItem(T("menu.quit"), "")
 	go func() {
@@ -69,32 +152,26 @@ func onReady(cfg trayConfig) {
 		if v.State != prev {
 			systray.SetIcon(iconBytes(v.State))
 			cfg.log.Printf("%-6s %s", v.State, summary(v))
+			if v.State == state.Red && flashOn.Load() && desktop.CanFlash() {
+				desktop.FlashClaude()
+			}
 			prev = v.State
 		}
 		systray.SetTooltip(truncate("AgentSemaphore: "+v.Tooltip, 127))
+		rows := menuRows(v)
 		for i, it := range items {
-			if i < len(v.Sessions) {
-				s := v.Sessions[i]
-				label := fmt.Sprintf("%s  %s", dots[s.State], s.Name)
-				if s.Detail != "" && (s.State == state.Red || s.State == state.Grey) {
-					label += "  (" + s.Detail + ")"
-				}
-				it.SetTitle(label)
+			if i < len(rows) {
+				it.SetTitle(rows[i])
 				it.Show()
 			} else {
 				it.Hide()
 			}
 		}
-		if extra := len(v.Sessions) - maxMenuSessions; extra > 0 {
+		if extra := len(rows) - maxMenuRows; extra > 0 {
 			more.SetTitle(fmt.Sprintf("+%d …", extra))
 			more.Show()
 		} else {
 			more.Hide()
-		}
-		if len(v.Sessions) == 0 {
-			none.Show()
-		} else {
-			none.Hide()
 		}
 	}
 	go func() {

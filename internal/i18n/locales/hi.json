@@ -3,7 +3,7 @@
   "state.orange": "काम कर रहा है",
   "state.green": "सब शांत है",
   "state.grey": "अज्ञात — एक स्रोत पढ़ा नहीं जा सका",
-  "tooltip.allQuiet": "सब शांत है, कुछ भी आपका इंतज़ार नहीं कर रहा",
+  "tooltip.allQuiet": "इस पीसी पर सब शांत है, कुछ भी आपका इंतज़ार नहीं कर रहा",
   "tooltip.summary": "{waiting} इंतज़ार में · {working} काम में · {idle} निष्क्रिय",
   "tooltip.unknown": "पढ़ा नहीं जा सका: {sources}",
   "tooltip.starting": "शुरू हो रहा है…",
@@ -17,5 +17,9 @@
   "reason.toast": "चैट/Cowork",
   "source.claudeCode": "Claude Code सत्र",
   "source.claudeDesktopToasts": "Claude Desktop सूचनाएँ",
-  "source.error": "{source}: पढ़ा नहीं जा सका ({detail})"
+  "source.error": "{source}: पढ़ा नहीं जा सका ({detail})",
+  "menu.sourceNothing": "कुछ भी लंबित नहीं",
+  "menu.sourceAbsent": "इस सिस्टम पर नहीं मिला",
+  "menu.toastsRedOnly": "केवल वही दिखाता है जिसमें आपकी ज़रूरत है",
+  "menu.notVisible": "दिखाई नहीं देता: डायलॉग खुले होने पर क्लाउड सत्र, दूसरी मशीनें"
 }

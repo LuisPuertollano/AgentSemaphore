@@ -49,3 +49,30 @@ func TestAbsentSourceIsNotAnError(t *testing.T) {
 		t.Fatalf("absent source must not turn grey: %v", v.State)
 	}
 }
+
+func TestGroupsSayWhatIsWatched(t *testing.T) {
+	v := Build([]source.Result{
+		{Source: "claudeCode", Sessions: []source.Session{{Name: "b", State: state.Green}, {Name: "a", State: state.Red}}},
+		{Source: "claudeDesktopToasts", Health: source.Absent},
+	}, "en")
+	if len(v.Groups) != 2 {
+		t.Fatalf("groups %+v", v.Groups)
+	}
+	if v.Groups[0].Title != "Claude Code sessions" || v.Groups[0].Sessions[0].Name != "a" || v.Groups[0].Note != "" {
+		t.Errorf("claude code group %+v", v.Groups[0])
+	}
+	if v.Groups[1].Title != "Claude Desktop notifications (shows only what needs you)" || v.Groups[1].Note != "not found on this system" {
+		t.Errorf("toasts group %+v", v.Groups[1])
+	}
+	if !strings.HasPrefix(v.NotVisible, "Not visible:") {
+		t.Errorf("not-visible line %q", v.NotVisible)
+	}
+	empty := Build([]source.Result{{Source: "claudeCode"}}, "es")
+	if empty.Groups[0].Note != "nada pendiente" {
+		t.Errorf("empty source note %q", empty.Groups[0].Note)
+	}
+	broken := Build([]source.Result{{Source: "claudeDesktopToasts", Health: source.Error, Detail: "no such table"}}, "en")
+	if g := broken.Groups[0]; len(g.Sessions) != 1 || g.Sessions[0].State != state.Grey || !strings.Contains(g.Note, "no such table") {
+		t.Errorf("broken source group %+v", g)
+	}
+}

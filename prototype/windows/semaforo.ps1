@@ -180,7 +180,7 @@ $script:tick = {
 
     # Icono y tooltip (maximo 127 caracteres)
     $script:ni.Icon = $script:iconos[$color]
-    if ($ses.Count -eq 0) { $txt = 'Claude: todo en reposo, nada te espera' }
+    if ($ses.Count -eq 0) { $txt = 'Claude: todo en calma en este PC, nada te espera' }
     else {
       $n = @{ rojo = 0; naranja = 0; verde = 0; gris = 0 }; foreach ($s in $ses) { $n[$s.Color]++ }
       $txt = "Claude: $($n.rojo) te espera(n) · $($n.naranja) trabajando · $($n.verde) en reposo"
@@ -202,7 +202,8 @@ $script:tick = {
       $it = [System.Windows.Forms.ToolStripMenuItem]::new($etq); $it.add_Click($script:abrir)
       $script:menu.Items.Insert($i, $it); $i++
     }
-    if ($i -eq 0) { $v = [System.Windows.Forms.ToolStripMenuItem]::new('Nada te espera (sin sesiones activas)'); $v.Enabled = $false; $script:menu.Items.Insert(0, $v) }
+    if ($i -eq 0) { $v = [System.Windows.Forms.ToolStripMenuItem]::new('Nada te espera en este PC (sin sesiones activas)'); $v.Enabled = $false; $script:menu.Items.Insert(0, $v); $i++ }
+    $nv = [System.Windows.Forms.ToolStripMenuItem]::new('No visible: sesiones en la nube con un dialogo abierto, otras maquinas'); $nv.Enabled = $false; $script:menu.Items.Insert($i, $nv)
 
     # Al pasar a rojo: parpadeo de la ventana de Claude en la barra de tareas
     if ($color -eq 'rojo' -and $script:anterior -ne 'rojo' -and $script:ajustes.Parpadeo) {

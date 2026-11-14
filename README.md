@@ -87,7 +87,8 @@ clock, drag it onto the taskbar.
 
 One binary of about 7 MB with nothing else to install, built for Windows x64/ARM64, Linux x64/ARM64 and
 macOS. It reads Claude Code sessions everywhere and, on Windows, Claude Desktop's notifications. It does not
-need Python. Every CI run uploads
+need Python. Left-click the dot to open Claude; right-click for the menu (start at sign-in, flash the taskbar
+on red, quit). Every CI run uploads
 the binaries as artifacts. Releases will follow.
 
 ```sh
