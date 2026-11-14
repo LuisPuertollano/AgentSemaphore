@@ -40,7 +40,7 @@ Claude Code 2.1.325, read-only probe):**
 | Tool permission dialog (permission mode "Ask") | `waiting` / `permission prompt` | set when the dialog appeared, back to `busy` on approval |
 | AskUserQuestion | `waiting` / `input needed` | set within ~0.1 s of the question |
 | Same session in **Auto** permission mode | no dialog, so no `waiting` (expected) | — |
-| Plan approval | not tested yet | — |
+| Plan approval | not tested in the Code tab (see CLI below) | — |
 
 - Windows session files carry `procStart` and `pidDomain` too.
 - Claude Desktop creates **short-lived session files with an empty `status`** (< 1 s) while sessions start
@@ -51,6 +51,18 @@ Claude Code 2.1.325, read-only probe):**
   every CLI window showed *"Transcript saving is off — inherited `CLAUDE_CODE_CHILD_SESSION` marker"*.
   Likely cause: child sessions do not save their state. The script now clears `CLAUDE_CODE_*` variables
   before launching. To recheck from a normal PowerShell window.
+- **Rerun with the CLI updated to 2.1.325, from a normal PowerShell window (2026-11-14):** every session
+  wrote its `.json` (with `procStart`). Not known which of the two changes fixed it.
+
+  | Prompt (CLI 2.1.325, Windows ARM64) | Timeline (s after start → status [waitingFor]) |
+  |---|---|
+  | Command that needs permission | 1.1 *(empty)* → 1.3 idle → 1.6 busy → 7.7 waiting [permission prompt] |
+  | AskUserQuestion | 1.1 idle → 1.3 busy → 9.0 waiting [input needed] |
+  | Plan approval (plan mode) | 0.8 *(empty)* → 1.1 idle → 1.3 busy → 16.1 waiting [**permission prompt**] |
+  | Question in plain text, then stop | 0.8 *(empty)* → 1.1 idle → 1.3 busy → 8.2 **idle** (known gap, #20) |
+
+  So all three kinds of prompt set `waiting`; plan approval reports itself as `permission prompt`. The CLI
+  also starts with an empty `status` for ~0.3 s, which confirms the need for the starting grace period.
 - In the CLI, `whoami` ran **without** a permission dialog (read-only commands are allowed automatically),
   while the Desktop Code tab asked. The test now uses a command that writes a file.
 

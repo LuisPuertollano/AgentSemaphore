@@ -13,7 +13,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
+	"unicode/utf16"
 
 	"github.com/LuisPuertollano/AgentSemaphore/internal/aggregate"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/config"
@@ -59,9 +61,10 @@ func main() {
 		if loadErr != nil {
 			out.Warning = loadErr.Error()
 		}
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "  ")
-		_ = enc.Encode(out)
+		data, _ := json.MarshalIndent(out, "", "  ")
+		// ASCII-only output: Windows consoles decode a child's stdout with the
+		// OEM code page, which garbled "·" as "┬À" (seen on Windows 11, 2026-11-14).
+		os.Stdout.Write(append(asciiJSON(data), '\n'))
 		return
 	}
 
@@ -75,6 +78,24 @@ func main() {
 		interval: time.Duration(settings.PollIntervalMs) * time.Millisecond,
 		log:      logger,
 	})
+}
+
+// asciiJSON escapes every non-ASCII character of valid JSON as \uXXXX (with
+// surrogate pairs above U+FFFF), so the output survives any console code page.
+func asciiJSON(data []byte) []byte {
+	var b strings.Builder
+	for _, r := range string(data) {
+		switch {
+		case r < 0x80:
+			b.WriteRune(r)
+		case r <= 0xFFFF:
+			fmt.Fprintf(&b, "\\u%04x", r)
+		default:
+			r1, r2 := utf16.EncodeRune(r)
+			fmt.Fprintf(&b, "\\u%04x\\u%04x", r1, r2)
+		}
+	}
+	return []byte(b.String())
 }
 
 type sessionJSON struct {
