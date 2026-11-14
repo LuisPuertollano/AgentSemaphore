@@ -112,20 +112,20 @@ func TestEmptyStatusWhileStartingDoesNotFlashGrey(t *testing.T) {
 	clock := time.Date(2026, 11, 14, 16, 41, 1, 0, time.UTC)
 	s := newSource(dir)
 	s.Now = func() time.Time { return clock }
-	write(t, dir, "120.json", `{"pid":120,"name":"luisp-6f","status":""}`)
-	if _, ok := byName(s.Poll())["luisp-6f"]; ok {
+	write(t, dir, "120.json", `{"pid":120,"name":"user-6f","status":""}`)
+	if _, ok := byName(s.Poll())["user-6f"]; ok {
 		t.Fatal("starting session must be ignored, not grey")
 	}
 	clock = clock.Add(StartingGrace - time.Second)
-	if _, ok := byName(s.Poll())["luisp-6f"]; ok {
+	if _, ok := byName(s.Poll())["user-6f"]; ok {
 		t.Fatal("still within the grace period")
 	}
 	clock = clock.Add(2 * time.Second)
-	if got := byName(s.Poll())["luisp-6f"].State; got != state.Grey {
+	if got := byName(s.Poll())["user-6f"].State; got != state.Grey {
 		t.Fatalf("empty status after the grace period should be grey, got %v", got)
 	}
-	write(t, dir, "120.json", `{"pid":120,"name":"luisp-6f","status":"idle"}`)
-	if got := byName(s.Poll())["luisp-6f"].State; got != state.Green {
+	write(t, dir, "120.json", `{"pid":120,"name":"user-6f","status":"idle"}`)
+	if got := byName(s.Poll())["user-6f"].State; got != state.Green {
 		t.Fatalf("got %v", got)
 	}
 }

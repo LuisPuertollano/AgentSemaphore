@@ -1,5 +1,10 @@
 # AgentSemaphore
 
+> ⚠️ **Pre-alpha — testing stage.** This is an early, moving project: things will break, formats will change,
+> and it has only been tried on a handful of machines. Please do not rely on it yet.
+> **If you try it, you are warmly invited to help:** report what you see on your system, share findings about
+> agents' state files or notifications, or send a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 A tiny traffic light in your system tray that shows what your AI agents are doing —
 so you can stop watching their windows and turn off the notification noise.
 
@@ -9,7 +14,7 @@ so you can stop watching their windows and turn off the notification noise.
 | 🟠 | An agent is working and does not need you |
 | 🟢 | All quiet |
 
-**Status: early prototype (Windows only).** Cross-platform (Linux, macOS) and more agents
+**Status: pre-alpha. Windows prototype works; the cross-platform core is in progress.** Cross-platform (Linux, macOS) and more agents
 (Gemini CLI, Codex, Copilot CLI…) are planned — see [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## What it watches today

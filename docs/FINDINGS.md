@@ -44,11 +44,15 @@ Claude Code 2.1.325, read-only probe):**
 
 - Windows session files carry `procStart` and `pidDomain` too.
 - Claude Desktop creates **short-lived session files with an empty `status`** (< 1 s) while sessions start
-  (e.g. `luisp-6f`, `financedata-24`). An empty status is therefore ignored for 10 s before it counts
+  (named like `<user>-6f` or `<project>-24`). An empty status is therefore ignored for 10 s before it counts
   as unknown (grey), so the tray does not flash grey.
 - **CLI 2.1.235 (npm install, Windows):** four sessions started from a script ran 2 min each and wrote only
-  `<pid>.<hash>.key`, **no `.json`**. Not yet known whether that older version does not write session state
-  or the sessions were stuck at a startup prompt. To recheck after updating the CLI.
+  `<pid>.<hash>.key`, **no `.json`**. The script had been started from inside a Claude Code session, and
+  every CLI window showed *"Transcript saving is off — inherited `CLAUDE_CODE_CHILD_SESSION` marker"*.
+  Likely cause: child sessions do not save their state. The script now clears `CLAUDE_CODE_*` variables
+  before launching. To recheck from a normal PowerShell window.
+- In the CLI, `whoami` ran **without** a permission dialog (read-only commands are allowed automatically),
+  while the Desktop Code tab asked. The test now uses a command that writes a file.
 
 **Documented alternative:** `claude agents --json` ("print active sessions … as a JSON array … for
 scripting; does not require a TTY") returns the local sessions with `pid`, `cwd`, `kind`, `startedAt`,
@@ -61,7 +65,7 @@ with the same fields plus `procStart` (process start time, useful against PID re
 `nameSource`, `peerProtocol`, `messagingSocketPath`. A `<pid>.<hash>.key` file sits next to it.
 
 **Gap observed (2026-11-14):** the claude.ai session list reported a Remote Control session
-("Proxmox SysAdmin") as "Waiting on permission: AskUserQuestion" while the laptop tray showed only
+as "Waiting on permission: AskUserQuestion" while the laptop tray showed only
 "1 idle". Checked on the laptop the same day: `~/.claude/sessions` held a single file
 (`status: idle`, `entrypoint: claude-desktop`, process `claude`) — the waiting session was **not
 running on the laptop**, so the tray was right about the laptop. It was a Claude Desktop **Code** tab
