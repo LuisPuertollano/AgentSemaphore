@@ -22,15 +22,18 @@ var colours = map[state.State]color.NRGBA{
 
 const size = 32
 
-// PNG returns a 32×32 anti-aliased dot with a thin dark outline.
-func PNG(s state.State) []byte {
+// PNG returns a 32×32 anti-aliased dot with a thin dark outline (the tray icon).
+func PNG(s state.State) []byte { return PNGSize(s, size) }
+
+// PNGSize draws the same dot at any size (used for documentation images).
+func PNGSize(s state.State, size int) []byte {
 	c, ok := colours[s]
 	if !ok {
 		c = colours[state.Grey]
 	}
 	img := image.NewNRGBA(image.Rect(0, 0, size, size))
-	const r = 14.0 // radius of the fill
-	const edge = 1.5
+	r := float64(size) * 14 / 32 // radius of the fill
+	edge := float64(size) * 1.5 / 32
 	center := float64(size) / 2
 	for y := 0; y < size; y++ {
 		for x := 0; x < size; x++ {

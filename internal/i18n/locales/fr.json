@@ -1,0 +1,21 @@
+{
+  "state.red": "En attente de vous",
+  "state.orange": "En cours",
+  "state.green": "Tout est calme",
+  "state.grey": "Inconnu — une source n'a pas pu être lue",
+  "tooltip.allQuiet": "Tout est calme, rien ne vous attend",
+  "tooltip.summary": "{waiting} en attente · {working} en cours · {idle} au repos",
+  "tooltip.unknown": "Illisible : {sources}",
+  "tooltip.starting": "Démarrage…",
+  "menu.noSessions": "Rien ne vous attend (aucune session active)",
+  "menu.openClaude": "Ouvrir Claude",
+  "menu.flashOnRed": "Faire clignoter la barre des tâches au passage au rouge",
+  "menu.startWithSystem": "Lancer au démarrage du système",
+  "menu.language": "Langue",
+  "menu.languageAuto": "Langue du système",
+  "menu.quit": "Quitter",
+  "reason.toast": "chat/Cowork",
+  "source.claudeCode": "Sessions Claude Code",
+  "source.claudeDesktopToasts": "Notifications de Claude Desktop",
+  "source.error": "{source} : illisible ({detail})"
+}

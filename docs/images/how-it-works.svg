@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-label="Diagram: detection sources feed one aggregate state, shown as the tray dot">
+  <title>How AgentSemaphore works</title>
+  <style>
+    text { font-family: "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; }
+    .box { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; }
+    .planned { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .h { font-size: 14px; font-weight: 600; fill: #0f172a; }
+    .t { font-size: 12px; fill: #475569; }
+    .arrow { stroke: #64748b; stroke-width: 2; fill: none; marker-end: url(#a); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="760" height="300" rx="14" fill="#eef2f7"/>
+  <text x="24" y="32" class="h" fill="#0f172a">Sources (read-only)</text>
+  <text x="300" y="32" class="h">Aggregate</text>
+  <text x="560" y="32" class="h">Your tray / menu bar</text>
+
+  <rect class="box" x="24" y="48" width="230" height="64" rx="10"/>
+  <text x="38" y="72" class="h">Claude Code sessions</text>
+  <text x="38" y="92" class="t">~/.claude/sessions/*.json</text>
+  <text x="38" y="106" class="t">CLI and Desktop "Code" tab</text>
+
+  <rect class="box" x="24" y="124" width="230" height="64" rx="10"/>
+  <text x="38" y="148" class="h">Claude Desktop notifications</text>
+  <text x="38" y="168" class="t">Windows notification centre</text>
+  <text x="38" y="182" class="t">chat, Cowork, end of Code turns</text>
+
+  <rect class="planned" x="24" y="200" width="230" height="64" rx="10"/>
+  <text x="38" y="224" class="h" fill="#475569">More agents (planned)</text>
+  <text x="38" y="244" class="t">Gemini CLI, Codex CLI,</text>
+  <text x="38" y="258" class="t">Copilot CLI, …</text>
+
+  <rect class="box" x="300" y="108" width="210" height="96" rx="10"/>
+  <text x="316" y="134" class="h">Worst state wins</text>
+  <circle cx="326" cy="156" r="7" fill="#dc2626"/><text x="338" y="160" class="t">red &gt;</text>
+  <circle cx="380" cy="156" r="7" fill="#8c8c8c"/><text x="392" y="160" class="t">grey &gt;</text>
+  <circle cx="440" cy="156" r="7" fill="#f58c14"/><text x="452" y="160" class="t">orange &gt;</text>
+  <circle cx="326" cy="182" r="7" fill="#22aa50"/><text x="338" y="186" class="t">green · never a wrong green</text>
+
+  <path class="arrow" d="M254 80 C 280 80, 280 140, 298 140"/>
+  <path class="arrow" d="M254 156 L 298 156"/>
+  <path class="arrow" d="M254 232 C 280 232, 280 172, 298 172" stroke-dasharray="5 4"/>
+
+  <rect class="box" x="560" y="108" width="176" height="96" rx="10"/>
+  <circle cx="588" cy="140" r="12" fill="#dc2626" stroke="#141414" stroke-width="1"/>
+  <text x="608" y="145" class="h">one dot</text>
+  <text x="576" y="172" class="t">tooltip: who is waiting</text>
+  <text x="576" y="190" class="t">menu: every session</text>
+  <path class="arrow" d="M510 156 L 558 156"/>
+</svg>

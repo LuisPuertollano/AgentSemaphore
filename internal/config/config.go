@@ -28,7 +28,7 @@ const (
 )
 
 // SupportedLanguages are the UI languages with a string catalog.
-var SupportedLanguages = []string{"en", "es", "de"}
+var SupportedLanguages = []string{"en", "es", "de", "fr", "it", "zh", "hi"}
 
 // Settings is everything the user can change. New fields must have a safe
 // default in Defaults(), because older files will not contain them.

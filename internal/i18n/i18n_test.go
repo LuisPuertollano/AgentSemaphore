@@ -14,7 +14,7 @@ func TestCatalogsAreComplete(t *testing.T) {
 	if len(en) == 0 {
 		t.Fatal("English catalog missing or empty")
 	}
-	for _, lang := range []string{"es", "de"} {
+	for _, lang := range []string{"es", "de", "fr", "it", "zh", "hi"} {
 		c, ok := catalogs[lang]
 		if !ok {
 			t.Fatalf("catalog %s missing", lang)
@@ -50,7 +50,7 @@ func TestCatalogsAreComplete(t *testing.T) {
 func TestNormalize(t *testing.T) {
 	for in, want := range map[string]string{
 		"de_DE.UTF-8": "de", "es-ES": "es", "EN": "en", "en_US@euro": "en",
-		"fr_FR": "", "C": "", "POSIX": "", "auto": "", "": "",
+		"fr_FR": "fr", "zh-Hans-CN": "zh", "hi_IN.UTF-8": "hi", "pt_BR": "", "C": "", "POSIX": "", "auto": "", "": "",
 	} {
 		if got := normalize(in); got != want {
 			t.Errorf("normalize(%q) = %q, want %q", in, got, want)
@@ -69,6 +69,23 @@ func TestResolveAutoUsesEnvironment(t *testing.T) {
 	t.Setenv("LC_ALL", "es_ES.UTF-8")
 	if got := Resolve("auto"); got != "es" {
 		t.Skipf("system language source is not the environment on this OS (got %q)", got)
+	}
+}
+
+func TestEveryCatalogIsSupported(t *testing.T) {
+	// Every language with a catalog must be selectable in the settings, and vice versa.
+	want := map[string]bool{}
+	for _, l := range []string{"en", "es", "de", "fr", "it", "zh", "hi"} {
+		want[l] = true
+	}
+	for _, l := range Languages() {
+		if !want[l] {
+			t.Errorf("catalog %q not in the supported list", l)
+		}
+		delete(want, l)
+	}
+	for l := range want {
+		t.Errorf("supported language %q has no catalog", l)
 	}
 }
 
