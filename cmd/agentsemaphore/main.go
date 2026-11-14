@@ -20,6 +20,7 @@ import (
 	"github.com/LuisPuertollano/AgentSemaphore/internal/aggregate"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/config"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/i18n"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/single"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source/claudecode"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source/toasts"
@@ -74,11 +75,22 @@ func main() {
 	if loadErr != nil {
 		logger.Printf("settings: %v", loadErr)
 	}
+	release, ok, err := single.Acquire()
+	if err != nil {
+		logger.Printf("single-instance lock: %v (continuing)", err)
+	} else if !ok {
+		logger.Printf("already running; this copy exits")
+		return
+	} else {
+		defer release()
+	}
 	runTray(trayConfig{
-		sources:  buildSources(settings, logger),
-		lang:     lang,
-		interval: time.Duration(settings.PollIntervalMs) * time.Millisecond,
-		log:      logger,
+		sources:      buildSources(settings, logger),
+		lang:         lang,
+		interval:     time.Duration(settings.PollIntervalMs) * time.Millisecond,
+		log:          logger,
+		settings:     settings,
+		settingsPath: settingsPath,
 	})
 }
 
