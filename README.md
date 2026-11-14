@@ -22,6 +22,18 @@ so you can stop watching their windows and turn off the notification noise.
 Install with [install/windows](install/windows/README.md) (per user, opt-in silencing of
 Claude's pop-ups, clean uninstall). Details of the prototype: [prototype/windows/README.md](prototype/windows/README.md).
 
+## Cross-platform core (in progress)
+
+A single Go binary for Windows (x64, ARM64), Linux and macOS, no runtime needed. It already reads
+Claude Code sessions; Claude Desktop notifications follow.
+
+```sh
+go run ./cmd/agentsemaphore          # tray app
+go run ./cmd/agentsemaphore -once    # print the current state as JSON and exit
+```
+
+CI builds the binaries on every push (artifacts on the workflow run).
+
 ## License
 
 MIT — free forever, no telemetry, no accounts.
