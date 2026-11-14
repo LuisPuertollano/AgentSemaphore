@@ -1,0 +1,141 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"runtime"
+	"time"
+
+	"fyne.io/systray"
+
+	"github.com/LuisPuertollano/AgentSemaphore/internal/aggregate"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/i18n"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/icon"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/source"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/state"
+)
+
+// maxMenuSessions is how many sessions the menu lists; the rest are summarised.
+const maxMenuSessions = 12
+
+type trayConfig struct {
+	sources  []source.Source
+	lang     string
+	interval time.Duration
+	log      *log.Logger
+}
+
+var dots = map[state.State]string{state.Red: "🔴", state.Orange: "🟠", state.Green: "🟢", state.Grey: "⚪"}
+
+func runTray(cfg trayConfig) {
+	systray.Run(func() { onReady(cfg) }, func() { cfg.log.Println("exit") })
+}
+
+func iconBytes(s state.State) []byte {
+	p := icon.PNG(s)
+	if runtime.GOOS == "windows" {
+		return icon.ICO(p)
+	}
+	return p
+}
+
+func onReady(cfg trayConfig) {
+	T := func(key string, args ...string) string { return i18n.T(cfg.lang, key, args...) }
+	systray.SetIcon(iconBytes(state.Grey))
+	systray.SetTooltip("AgentSemaphore: " + T("tooltip.starting"))
+
+	items := make([]*systray.MenuItem, maxMenuSessions)
+	for i := range items {
+		items[i] = systray.AddMenuItem("", "")
+		items[i].Disable()
+		items[i].Hide()
+	}
+	more := systray.AddMenuItem("", "")
+	more.Disable()
+	more.Hide()
+	none := systray.AddMenuItem(T("menu.noSessions"), "")
+	none.Disable()
+	systray.AddSeparator()
+	quit := systray.AddMenuItem(T("menu.quit"), "")
+	go func() {
+		<-quit.ClickedCh
+		systray.Quit()
+	}()
+
+	cfg.log.Printf("start, %d source(s), language %s, every %v", len(cfg.sources), cfg.lang, cfg.interval)
+	prev := state.State(-1)
+	refresh := func() {
+		v := poll(cfg.sources, cfg.lang)
+		if v.State != prev {
+			systray.SetIcon(iconBytes(v.State))
+			cfg.log.Printf("%-6s %s", v.State, summary(v))
+			prev = v.State
+		}
+		systray.SetTooltip(truncate("AgentSemaphore: "+v.Tooltip, 127))
+		for i, it := range items {
+			if i < len(v.Sessions) {
+				s := v.Sessions[i]
+				label := fmt.Sprintf("%s  %s", dots[s.State], s.Name)
+				if s.Detail != "" && (s.State == state.Red || s.State == state.Grey) {
+					label += "  (" + s.Detail + ")"
+				}
+				it.SetTitle(label)
+				it.Show()
+			} else {
+				it.Hide()
+			}
+		}
+		if extra := len(v.Sessions) - maxMenuSessions; extra > 0 {
+			more.SetTitle(fmt.Sprintf("+%d …", extra))
+			more.Show()
+		} else {
+			more.Hide()
+		}
+		if len(v.Sessions) == 0 {
+			none.Show()
+		} else {
+			none.Hide()
+		}
+	}
+	go func() {
+		refresh()
+		t := time.NewTicker(cfg.interval)
+		defer t.Stop()
+		for range t.C {
+			refresh()
+		}
+	}()
+}
+
+func summary(v aggregate.View) string {
+	s := ""
+	for _, x := range v.Sessions {
+		if x.State == v.State {
+			if s != "" {
+				s += "; "
+			}
+			s += x.Name
+			if x.Detail != "" {
+				s += " [" + x.Detail + "]"
+			}
+		}
+	}
+	return s
+}
+
+// truncate keeps the tooltip within the Windows limit (127 UTF-16 units),
+// cutting on a rune boundary.
+func truncate(s string, max int) string {
+	units := 0
+	for i, r := range s {
+		n := 1
+		if r > 0xFFFF {
+			n = 2
+		}
+		if units+n > max-1 {
+			return s[:i] + "…"
+		}
+		units += n
+	}
+	return s
+}

@@ -27,6 +27,45 @@ jobs:
         run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
       - run: go vet ./...
       - run: go test ./...
+      - name: Build and smoke test (-version, -once)
+        shell: bash
+        run: |
+          ext=""; [ "$RUNNER_OS" = "Windows" ] && ext=".exe"
+          go build -trimpath -o "dist/agentsemaphore$ext" ./cmd/agentsemaphore
+          "./dist/agentsemaphore$ext" -version
+          "./dist/agentsemaphore$ext" -once | tee once.json
+          python3 -c "import json; d = json.load(open('once.json')); assert d['state'] in ('green', 'orange', 'red', 'grey'), d; print('state:', d['state'])"
+
+  binaries:
+    name: Binaries (${{ matrix.target }})
+    needs: go
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: windows-amd64, os: ubuntu-latest, goos: windows, goarch: amd64, cgo: '0', ext: .exe, ldflags: -H=windowsgui }
+          - { target: windows-arm64, os: ubuntu-latest, goos: windows, goarch: arm64, cgo: '0', ext: .exe, ldflags: -H=windowsgui }
+          - { target: linux-amd64,   os: ubuntu-latest, goos: linux,   goarch: amd64, cgo: '0', ext: '',   ldflags: '' }
+          - { target: linux-arm64,   os: ubuntu-latest, goos: linux,   goarch: arm64, cgo: '0', ext: '',   ldflags: '' }
+          - { target: darwin-arm64,  os: macos-latest,  goos: darwin,  goarch: arm64, cgo: '1', ext: '',   ldflags: '' }
+          - { target: darwin-amd64,  os: macos-latest,  goos: darwin,  goarch: amd64, cgo: '1', ext: '',   ldflags: '' }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: ${{ matrix.cgo }}
+        run: go build -trimpath -ldflags "-s -w ${{ matrix.ldflags }} -X main.version=${GITHUB_SHA::7}" -o "dist/agentsemaphore-${{ matrix.target }}${{ matrix.ext }}" ./cmd/agentsemaphore
+      - uses: actions/upload-artifact@v7
+        with:
+          name: agentsemaphore-${{ matrix.target }}
+          path: dist/
+          retention-days: 14
 
   # Windows on Arm runners are free only for public repositories.
   go-windows-arm:
