@@ -19,7 +19,8 @@ so you can stop watching their windows and turn off the notification noise.
 
 ## Try the Windows prototype
 
-See [prototype/windows/README.md](prototype/windows/README.md).
+Install with [install/windows](install/windows/README.md) (per user, opt-in silencing of
+Claude's pop-ups, clean uninstall). Details of the prototype: [prototype/windows/README.md](prototype/windows/README.md).
 
 ## License
 

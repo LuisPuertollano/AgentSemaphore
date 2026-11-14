@@ -22,6 +22,31 @@ Liveness: the file is ignored unless `pid` is alive **and** the process name is 
 ⚠️ Undocumented. Not yet verified: which prompts (permission vs AskUserQuestion vs plan
 approval) set `waiting`. Verify before relying on it; fall back to hooks if needed.
 
+**Static reading of the 2.1.325 binary (2026-11-14, not a runtime test).** The interactive UI
+derives the state like this: `waiting` if an MCP elicitation is queued (`waitingFor: "input needed"`),
+else if the top dialog declares a reason (permission dialogs default to `"permission prompt"`;
+about 25 other dialogs use `"dialog open"`; also `"sandbox request"`, `"goal proposal"`), else if a
+worker or sandbox request is pending (`"worker request"`, `"sandbox request"`); otherwise `busy`
+while a query runs, else `idle`. AskUserQuestion and plan approval are not named explicitly; they
+are expected to arrive as permission dialogs. This logic lives in the terminal UI, so the Desktop
+**Code** tab (which draws its own dialogs) still has to be checked on a real machine
+([issue #11](https://github.com/LuisPuertollano/AgentSemaphore/issues/11)).
+
+**Linux uses the same format** (checked in a cloud container, 2.1.325): `~/.claude/sessions/<pid>.json`
+with the same fields plus `procStart` (process start time, useful against PID reuse), `pidDomain`,
+`nameSource`, `peerProtocol`, `messagingSocketPath`. A `<pid>.<hash>.key` file sits next to it.
+
+**Gap observed (2026-11-14):** the claude.ai session list reported a Remote Control session
+("Proxmox SysAdmin") as "Waiting on permission: AskUserQuestion" while the laptop tray showed only
+"1 idle". Checked on the laptop the same day: `~/.claude/sessions` held a single file
+(`status: idle`, `entrypoint: claude-desktop`, process `claude`) — the waiting session was **not
+running on the laptop**, so the tray was right about the laptop. Sessions on other machines and in the
+cloud are invisible to local sources; see the idea in
+[issue #19](https://github.com/LuisPuertollano/AgentSemaphore/issues/19).
+
+Side note: `cambios.log` is UTF-8 without BOM; Windows PowerShell 5.1's `Get-Content` shows accents
+garbled (`semÃ¡foro`). Use `pwsh` or `Get-Content -Encoding UTF8`.
+
 ## 2. Claude Code hooks are unreliable inside Claude Desktop
 
 Open upstream issues report that `Notification` hooks (`permission_prompt`, `idle_prompt`)
@@ -49,7 +74,9 @@ But Claude Desktop posts toasts when a conversation needs you. Windows stores th
 Clearing rule: a toast counts as red until the Claude window has been in the foreground for
 ≥ 2 s after it arrived ("seen"), or until it disappears from the DB.
 
-Localisation: the regex covers ES/EN/DE phrases; English/German strings are **not yet verified**.
+Localisation: the phrases live in `prototype/windows/avisos-textos.json` per language; only Spanish is
+verified, English/German are **not yet verified** (procedure in `docs/VERIFY.md`). A Claude toast that
+matches no known phrase counts as red (better a red too many than a wrong green) and is logged.
 
 ## 4. Silent notifications keep the data source alive
 

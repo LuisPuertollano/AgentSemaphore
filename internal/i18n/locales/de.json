@@ -1,0 +1,21 @@
+{
+  "state.red": "Wartet auf dich",
+  "state.orange": "Arbeitet",
+  "state.green": "Alles ruhig",
+  "state.grey": "Unbekannt — eine Quelle ist nicht lesbar",
+  "tooltip.allQuiet": "Alles ruhig, nichts wartet auf dich",
+  "tooltip.summary": "{waiting} warten · {working} arbeiten · {idle} im Leerlauf",
+  "tooltip.unknown": "Nicht lesbar: {sources}",
+  "tooltip.starting": "Wird gestartet…",
+  "menu.noSessions": "Nichts wartet (keine aktiven Sitzungen)",
+  "menu.openClaude": "Claude öffnen",
+  "menu.flashOnRed": "Taskleiste blinkt, wenn es rot wird",
+  "menu.startWithSystem": "Mit dem System starten",
+  "menu.language": "Sprache",
+  "menu.languageAuto": "Wie das System",
+  "menu.quit": "Beenden",
+  "reason.toast": "Chat/Cowork",
+  "source.claudeCode": "Claude-Code-Sitzungen",
+  "source.claudeDesktopToasts": "Claude-Desktop-Benachrichtigungen",
+  "source.error": "{source}: nicht lesbar ({detail})"
+}
