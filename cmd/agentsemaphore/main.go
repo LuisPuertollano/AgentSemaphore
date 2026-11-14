@@ -22,6 +22,7 @@ import (
 	"github.com/LuisPuertollano/AgentSemaphore/internal/i18n"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source/claudecode"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/source/toasts"
 )
 
 // version is set at build time: -ldflags "-X main.version=..."
@@ -42,10 +43,11 @@ func main() {
 	}
 	settings, loadErr := config.Load(settingsPath)
 	lang := i18n.Resolve(settings.Language)
-	sources := buildSources(settings)
 
 	if *once {
-		v := poll(sources, lang)
+		// Note: toasts that arrived before start count as seen, so -once never
+		// shows notification reds; it is meant for checking sessions and health.
+		v := poll(buildSources(settings, nil), lang)
 		out := struct {
 			Version  string          `json:"version"`
 			Language string          `json:"language"`
@@ -73,7 +75,7 @@ func main() {
 		logger.Printf("settings: %v", loadErr)
 	}
 	runTray(trayConfig{
-		sources:  sources,
+		sources:  buildSources(settings, logger),
 		lang:     lang,
 		interval: time.Duration(settings.PollIntervalMs) * time.Millisecond,
 		log:      logger,
@@ -104,12 +106,20 @@ type sessionJSON struct {
 	Detail string `json:"detail,omitempty"`
 }
 
-func buildSources(s config.Settings) []source.Source {
+func buildSources(s config.Settings, logger *log.Logger) []source.Source {
 	var out []source.Source
 	if s.Sources.ClaudeCode {
 		out = append(out, claudecode.New())
 	}
-	// Claude Desktop notifications (Windows) arrive with issue #16.
+	if s.Sources.ClaudeDesktopToasts {
+		ts := &toasts.Source{P: toasts.NewPlatform()}
+		if logger != nil {
+			ts.OnUnknown = func(t toasts.Stored, i toasts.Info) {
+				logger.Printf("unrecognised Claude notification (counts as red): %s", i)
+			}
+		}
+		out = append(out, ts) // absent outside Windows
+	}
 	return out
 }
 

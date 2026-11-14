@@ -85,8 +85,9 @@ clock, drag it onto the taskbar.
 
 ### Windows, Linux, macOS (Go core, in progress)
 
-One binary of about 4 MB with nothing else to install, built for Windows x64/ARM64, Linux x64/ARM64 and
-macOS. It already reads Claude Code sessions; Claude Desktop notifications come next. Every CI run uploads
+One binary of about 7 MB with nothing else to install, built for Windows x64/ARM64, Linux x64/ARM64 and
+macOS. It reads Claude Code sessions everywhere and, on Windows, Claude Desktop's notifications. It does not
+need Python. Every CI run uploads
 the binaries as artifacts. Releases will follow.
 
 ```sh
