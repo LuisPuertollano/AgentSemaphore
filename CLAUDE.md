@@ -17,6 +17,15 @@ getting spammed by notifications.
 - The project must stay **100 % free** (MIT, no paid services, no telemetry, no accounts).
   It will be published on GitHub with README/landing page, screenshots and install instructions.
 
+## Git workflow
+
+- Always work on a branch and open a pull request; never push to `main` directly.
+- **Auto-merge (approved by Luis, 2026-11-14):** when every CI check on a PR you opened is green
+  (skipped jobs such as `windows-11-arm` on a private repo are fine) and it has no merge conflict,
+  mark it ready and merge it without asking. Use a merge commit so per-step commits stay visible.
+  Never merge with a red, pending or cancelled check, and never skip or disable a test to get green.
+- After merging, report what was merged, which issues closed and what still needs testing on a real machine.
+
 ## Where things run
 
 - Development: Claude Code in the cloud or on the Proxmox VM `claude-box` (VMID 152, node `proxmox1`).
