@@ -22,6 +22,24 @@ Liveness: the file is ignored unless `pid` is alive **and** the process name is 
 ⚠️ Undocumented. Not yet verified: which prompts (permission vs AskUserQuestion vs plan
 approval) set `waiting`. Verify before relying on it; fall back to hooks if needed.
 
+**Static reading of the 2.1.325 binary (2026-11-14, not a runtime test).** The interactive UI
+derives the state like this: `waiting` if an MCP elicitation is queued (`waitingFor: "input needed"`),
+else if the top dialog declares a reason (permission dialogs default to `"permission prompt"`;
+about 25 other dialogs use `"dialog open"`; also `"sandbox request"`, `"goal proposal"`), else if a
+worker or sandbox request is pending (`"worker request"`, `"sandbox request"`); otherwise `busy`
+while a query runs, else `idle`. AskUserQuestion and plan approval are not named explicitly; they
+are expected to arrive as permission dialogs. This logic lives in the terminal UI, so the Desktop
+**Code** tab (which draws its own dialogs) still has to be checked on a real machine
+([issue #11](https://github.com/LuisPuertollano/AgentSemaphore/issues/11)).
+
+**Linux uses the same format** (checked in a cloud container, 2.1.325): `~/.claude/sessions/<pid>.json`
+with the same fields plus `procStart` (process start time, useful against PID reuse), `pidDomain`,
+`nameSource`, `peerProtocol`, `messagingSocketPath`. A `<pid>.<hash>.key` file sits next to it.
+
+**Gap observed (2026-11-14):** the claude.ai session list reported a Remote Control session as
+"Waiting on permission: AskUserQuestion" while the laptop tray showed only "1 idle". Not yet known
+whether that session ran on the laptop and what its file said.
+
 ## 2. Claude Code hooks are unreliable inside Claude Desktop
 
 Open upstream issues report that `Notification` hooks (`permission_prompt`, `idle_prompt`)

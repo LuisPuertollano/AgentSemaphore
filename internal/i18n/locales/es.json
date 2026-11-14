@@ -1,0 +1,21 @@
+{
+  "state.red": "Te está esperando",
+  "state.orange": "Trabajando",
+  "state.green": "Todo en calma",
+  "state.grey": "Desconocido — no se pudo leer una fuente",
+  "tooltip.allQuiet": "Todo en calma, nada te espera",
+  "tooltip.summary": "{waiting} te esperan · {working} trabajando · {idle} en reposo",
+  "tooltip.unknown": "No se puede leer: {sources}",
+  "tooltip.starting": "Iniciando…",
+  "menu.noSessions": "Nada te espera (sin sesiones activas)",
+  "menu.openClaude": "Abrir Claude",
+  "menu.flashOnRed": "Parpadeo en la barra de tareas al ponerse en rojo",
+  "menu.startWithSystem": "Arrancar con el sistema",
+  "menu.language": "Idioma",
+  "menu.languageAuto": "El del sistema",
+  "menu.quit": "Salir",
+  "reason.toast": "chat/Cowork",
+  "source.claudeCode": "Sesiones de Claude Code",
+  "source.claudeDesktopToasts": "Avisos de Claude Desktop",
+  "source.error": "{source}: no se puede leer ({detail})"
+}
