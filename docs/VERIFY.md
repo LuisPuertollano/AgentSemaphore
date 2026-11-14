@@ -11,6 +11,8 @@ Results go into `docs/FINDINGS.md`. Before publishing, remove conversation title
    `%TEMP%\agentsemaphore-probe.log`.
 2. Run each step below twice: once in the **Claude Code CLI** (Windows Terminal, `claude`) and once
    in the **Claude Desktop Code tab**. Use the default permission mode (asks before running commands).
+   In the Code tab, pick a **local** folder as the environment, not an SSH host: an SSH session runs
+   on the remote machine and writes its session file there.
    Wait about 3 s at each prompt before answering, so the probe records it.
 
 | # | What to type / do | Expected `status` / `waitingFor` | CLI | Desktop Code |

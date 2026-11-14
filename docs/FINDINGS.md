@@ -40,9 +40,14 @@ with the same fields plus `procStart` (process start time, useful against PID re
 ("Proxmox SysAdmin") as "Waiting on permission: AskUserQuestion" while the laptop tray showed only
 "1 idle". Checked on the laptop the same day: `~/.claude/sessions` held a single file
 (`status: idle`, `entrypoint: claude-desktop`, process `claude`) — the waiting session was **not
-running on the laptop**, so the tray was right about the laptop. Sessions on other machines and in the
-cloud are invisible to local sources; see the idea in
-[issue #19](https://github.com/LuisPuertollano/AgentSemaphore/issues/19).
+running on the laptop**, so the tray was right about the laptop. It was a Claude Desktop **Code** tab
+session in an **SSH environment** (`root@<LAN host>`, Remote Control on): Desktop runs Claude Code on
+the remote host, so the session file lives there. Sessions on other machines (SSH environments,
+Remote Control) and in the cloud are invisible to local sources; see the ideas in
+[issue #19](https://github.com/LuisPuertollano/AgentSemaphore/issues/19) and
+[issue #24](https://github.com/LuisPuertollano/AgentSemaphore/issues/24).
+
+For the same reason, test point A in `docs/VERIFY.md` with a **local** Code-tab session.
 
 Side note: `cambios.log` is UTF-8 without BOM; Windows PowerShell 5.1's `Get-Content` shows accents
 garbled (`semÃ¡foro`). Use `pwsh` or `Get-Content -Encoding UTF8`.
