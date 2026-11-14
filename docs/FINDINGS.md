@@ -36,9 +36,16 @@ are expected to arrive as permission dialogs. This logic lives in the terminal U
 with the same fields plus `procStart` (process start time, useful against PID reuse), `pidDomain`,
 `nameSource`, `peerProtocol`, `messagingSocketPath`. A `<pid>.<hash>.key` file sits next to it.
 
-**Gap observed (2026-11-14):** the claude.ai session list reported a Remote Control session as
-"Waiting on permission: AskUserQuestion" while the laptop tray showed only "1 idle". Not yet known
-whether that session ran on the laptop and what its file said.
+**Gap observed (2026-11-14):** the claude.ai session list reported a Remote Control session
+("Proxmox SysAdmin") as "Waiting on permission: AskUserQuestion" while the laptop tray showed only
+"1 idle". Checked on the laptop the same day: `~/.claude/sessions` held a single file
+(`status: idle`, `entrypoint: claude-desktop`, process `claude`) — the waiting session was **not
+running on the laptop**, so the tray was right about the laptop. Sessions on other machines and in the
+cloud are invisible to local sources; see the idea in
+[issue #19](https://github.com/LuisPuertollano/AgentSemaphore/issues/19).
+
+Side note: `cambios.log` is UTF-8 without BOM; Windows PowerShell 5.1's `Get-Content` shows accents
+garbled (`semÃ¡foro`). Use `pwsh` or `Get-Content -Encoding UTF8`.
 
 ## 2. Claude Code hooks are unreliable inside Claude Desktop
 
@@ -67,7 +74,9 @@ But Claude Desktop posts toasts when a conversation needs you. Windows stores th
 Clearing rule: a toast counts as red until the Claude window has been in the foreground for
 ≥ 2 s after it arrived ("seen"), or until it disappears from the DB.
 
-Localisation: the regex covers ES/EN/DE phrases; English/German strings are **not yet verified**.
+Localisation: the phrases live in `prototype/windows/avisos-textos.json` per language; only Spanish is
+verified, English/German are **not yet verified** (procedure in `docs/VERIFY.md`). A Claude toast that
+matches no known phrase counts as red (better a red too many than a wrong green) and is logged.
 
 ## 4. Silent notifications keep the data source alive
 
