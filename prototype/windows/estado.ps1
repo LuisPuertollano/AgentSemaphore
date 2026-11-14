@@ -38,6 +38,10 @@ function Get-Peor([string[]]$colores) {
 # si falla 3 veces seguidas, la sesion sale en gris.
 $script:ultimoBueno = @{}
 $script:fallos = @{}
+# Claude crea ficheros de sesion con status vacio mientras arranca (visto en Windows:
+# duran < 1 s). Durante esta gracia se ignoran; si siguen vacios despues, gris.
+$script:graciaSeg = 10
+$script:primeraVez = @{}
 
 # $esClaude: scriptblock que recibe un pid y dice si es un proceso vivo de Claude Code.
 function Read-Sesiones([string]$dir, [scriptblock]$esClaude) {
@@ -68,12 +72,17 @@ function Read-Sesiones([string]$dir, [scriptblock]$esClaude) {
     if (-not (& $esClaude $sesPid)) { continue }   # sesion cerrada o pid reutilizado
     $name = Get-Campo $j 'name'; $cwd = Get-Campo $j 'cwd'; $status = Get-Campo $j 'status'
     $nombre = if ($name) { $name } elseif ($cwd) { Split-Path $cwd -Leaf } else { "pid $sesPid" }
+    if (-not $status) {
+      if (-not $script:primeraVez.ContainsKey($k)) { $script:primeraVez[$k] = [datetime]::UtcNow }
+      if (([datetime]::UtcNow - $script:primeraVez[$k]).TotalSeconds -lt $script:graciaSeg) { continue }   # arrancando
+    }
     $color = Get-Color $status
     $espera = if ($color -eq 'gris') { "estado desconocido: '$status'" } else { Get-Campo $j 'waitingFor' }
     [pscustomobject]@{ Color = $color; Nombre = $nombre; Status = $status; Espera = $espera }
   }
   foreach ($k in @($script:fallos.Keys)) { if (-not $vistos.ContainsKey($k)) { $script:fallos.Remove($k) } }
   foreach ($k in @($script:ultimoBueno.Keys)) { if (-not $vistos.ContainsKey($k)) { $script:ultimoBueno.Remove($k) } }
+  foreach ($k in @($script:primeraVez.Keys)) { if (-not $vistos.ContainsKey($k)) { $script:primeraVez.Remove($k) } }
 }
 
 # --- Avisos de Claude Desktop ---------------------------------------------------

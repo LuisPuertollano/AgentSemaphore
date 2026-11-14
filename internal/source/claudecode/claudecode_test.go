@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/state"
@@ -103,5 +104,28 @@ func TestStateOf(t *testing.T) {
 		if got := StateOf(in); got != want {
 			t.Errorf("StateOf(%q) = %v, want %v", in, got, want)
 		}
+	}
+}
+
+func TestEmptyStatusWhileStartingDoesNotFlashGrey(t *testing.T) {
+	dir := t.TempDir()
+	clock := time.Date(2026, 11, 14, 16, 41, 1, 0, time.UTC)
+	s := newSource(dir)
+	s.Now = func() time.Time { return clock }
+	write(t, dir, "120.json", `{"pid":120,"name":"luisp-6f","status":""}`)
+	if _, ok := byName(s.Poll())["luisp-6f"]; ok {
+		t.Fatal("starting session must be ignored, not grey")
+	}
+	clock = clock.Add(StartingGrace - time.Second)
+	if _, ok := byName(s.Poll())["luisp-6f"]; ok {
+		t.Fatal("still within the grace period")
+	}
+	clock = clock.Add(2 * time.Second)
+	if got := byName(s.Poll())["luisp-6f"].State; got != state.Grey {
+		t.Fatalf("empty status after the grace period should be grey, got %v", got)
+	}
+	write(t, dir, "120.json", `{"pid":120,"name":"luisp-6f","status":"idle"}`)
+	if got := byName(s.Poll())["luisp-6f"].State; got != state.Green {
+		t.Fatalf("got %v", got)
 	}
 }
