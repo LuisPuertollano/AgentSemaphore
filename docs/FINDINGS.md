@@ -123,10 +123,22 @@ Localisation: the phrases live in `prototype/windows/avisos-textos.json` per lan
 verified, English/German are **not yet verified** (procedure in `docs/VERIFY.md`). A Claude toast that
 matches no known phrase counts as red (better a red too many than a wrong green) and is logged.
 
-**Cloud sessions do not post toasts (live test, 2026-11-14):** a Claude Code session on claude.ai/code,
-opened from Claude Desktop, waited on AskUserQuestion with Desktop in the background. No Windows toast arrived
-and nothing appeared in the notification center. Cloud sessions are invisible to every local source
-([issue #22](https://github.com/LuisPuertollano/AgentSemaphore/issues/22)).
+**Claude Code sessions post a toast when their turn ends, not while a dialog waits (2026-11-14).**
+- Live test: a cloud session (claude.ai/code, opened from Desktop) waited on AskUserQuestion with Desktop in
+  the background. **No toast** arrived while the dialog was open.
+- The same session later posted toasts **at the end of each turn**, with the session title and a one-line
+  summary of the turn (e.g. what it needs from you). Desktop also posts them for local / SSH Code-tab
+  sessions.
+- These toasts carry language-independent markers in the payload:
+  - `<header id="session-session_<id>" title="<session title>">` → a **cloud** session;
+  - `<header id="session-local_<uuid>" …>` → a **Code-tab session, local or over SSH**.
+- `<audio silent="true"/>` appeared only on a summary that asked for nothing (one sample). The summaries that
+  needed attention, and a safeguards notice, were not silent. **Hypothesis, not yet confirmed:**
+  silent = informational. Until confirmed, every unrecognised Claude toast still counts as red, and the
+  prototype logs origin and silence so the hypothesis can be checked
+  ([issue #22](https://github.com/LuisPuertollano/AgentSemaphore/issues/22)).
+- So cloud and SSH sessions are partly visible: when a turn ends (including turns that end with a question in
+  plain text, #20), not while a permission or question dialog is open mid-turn.
 
 **Toast texts in other languages:** the Desktop package (`Claude_5.11492.5.0_arm64`, file `ion-dist.asar`)
 ships its UI strings in at least en, es, de, fr, it, pt, hi, id, ja and ko. `tools/windows/verify-phase1.ps1`

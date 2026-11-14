@@ -23,7 +23,7 @@ This file keeps the overview; the issues hold the details and progress.
 - Claude chat / Cowork / scheduled tasks → red via Desktop toasts in the notification DB.
 - Taskbar flash on transition to red; autostart; transition log (`cambios.log`).
 
-## Phase 1 — Harden Windows
+## Phase 1 — Harden Windows ✅ (2026-11-14)
 - Verify which Claude Code prompts set `status: waiting` (permission, AskUserQuestion, plan approval).
 - Verify toast texts in English and German UI.
 - "Unknown" (grey) state when a source fails or its format changes.

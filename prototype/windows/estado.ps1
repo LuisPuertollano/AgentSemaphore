@@ -101,6 +101,8 @@ function ConvertFrom-AvisosSalida($texto, [int]$codigo) {
       Utc    = [DateTimeOffset]::FromUnixTimeSeconds([int64](Get-Campo $_ 'epoch')).UtcDateTime
       Nombre = Get-Campo $_ 'nombre'
       Tipo   = Get-Campo $_ 'tipo'
+      Origen = Get-Campo $_ 'origen'
+      Silencioso = [bool](Get-Campo $_ 'silencioso')
       Textos = @(Get-Campo $_ 'textos') -join ' / '
     }
   })

@@ -102,7 +102,8 @@ function Update-Avisos {
     foreach ($a in $r.Avisos | Where-Object Tipo -eq 'desconocido') {
       if (-not $script:desconocidosVistos.ContainsKey("$($a.Id)")) {
         $script:desconocidosVistos["$($a.Id)"] = $true
-        Write-Log "aviso de Claude no reconocido (cuenta como rojo; anadir a avisos-textos.json): $($a.Textos)"
+        $marcas = @(); if ($a.Origen) { $marcas += "sesion $($a.Origen)" }; if ($a.Silencioso) { $marcas += 'silencioso' }
+        Write-Log "aviso de Claude no reconocido [$($marcas -join ', ')] (cuenta como rojo): $($a.Textos)"
       }
     }
   } else {
@@ -114,7 +115,7 @@ function Update-Avisos {
 function Get-AvisosRojos {
   foreach ($a in $script:avisos) {
     if ($a.Utc -gt $script:ultimoFoco) {
-      $motivo = if ($a.Tipo -eq 'desconocido') { 'aviso no reconocido' } else { 'chat/Cowork' }
+      $motivo = if ($a.Origen) { "sesion Code ($($a.Origen))" } elseif ($a.Tipo -eq 'desconocido') { 'aviso no reconocido' } else { 'chat/Cowork' }
       [pscustomobject]@{ Color = 'rojo'; Nombre = $a.Nombre; Status = 'aviso'; Espera = $motivo }
     }
   }
