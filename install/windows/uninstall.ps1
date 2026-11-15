@@ -29,6 +29,8 @@ $manifest = Read-Manifest $InstallDir
 if (-not $manifest) { throw "No $ManifestName in $InstallDir — nothing installed there by install.ps1, so nothing is removed." }
 
 Stop-Semaphore $InstallDir
+Stop-GoSemaphore $InstallDir
+Remove-RunValue $InstallDir
 
 # Notification settings back to what they were before the install.
 $backupPath = Join-Path $InstallDir 'notification-backup.json'
@@ -57,3 +59,5 @@ if ($PSCmdlet.ShouldProcess($InstallDir, 'Remove install folder')) {
   Remove-Item -LiteralPath $InstallDir -Recurse -Force
 }
 Write-Host 'AgentSemaphore removed.'
+$data = Join-Path $env:APPDATA 'AgentSemaphore'
+if (Test-Path -LiteralPath $data) { Write-Host "Your settings and log are kept in $data (delete the folder to remove them too)." }

@@ -68,4 +68,39 @@ $refused = $false
 try { & (Join-Path $PSScriptRoot 'uninstall.ps1') -InstallDir $foreign } catch { $refused = $true }
 Check ($refused -and (Test-Path $foreign)) 'uninstall refuses a folder without manifest'
 
+# 6. Go build: switch from the prototype, autostart via HKCU Run, uninstall.
+if (-not $env:AS_TEST_EXE) { throw 'AS_TEST_EXE (path to a built agentsemaphore.exe) is required' }
+$runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+Remove-ItemProperty -LiteralPath $runKey -Name AgentSemaphore -ErrorAction SilentlyContinue
+& $install -InstallDir $dir -Autostart -NoStart                       # prototype first
+Check (Test-Path $lnk) 'prototype installed with its shortcut'
+& $install -InstallDir $dir -Exe $env:AS_TEST_EXE -Autostart -NoStart  # then the Go build
+Check (Test-Path (Join-Path $dir 'agentsemaphore.exe')) 'Go build installed'
+Check (-not (Test-Path (Join-Path $dir 'semaforo.ps1'))) 'prototype files removed when switching'
+Check (-not (Test-Path $lnk)) 'prototype shortcut removed when switching'
+$run = (Get-ItemProperty -LiteralPath $runKey -Name AgentSemaphore -ErrorAction SilentlyContinue)?.AgentSemaphore
+Check ($run -eq ('"' + (Join-Path $dir 'agentsemaphore.exe') + '"')) 'HKCU Run entry points to the installed exe'
+$m = Get-Content (Join-Path $dir $ManifestName) -Raw | ConvertFrom-Json
+Check ($m.mode -eq 'go' -and $m.runValue) 'manifest records the Go mode and the Run entry'
+
+# Re-install while it runs: the running copy is stopped first, then replaced.
+$proc = Start-Process (Join-Path $dir 'agentsemaphore.exe') -PassThru
+Start-Sleep -Seconds 3
+Check (-not $proc.HasExited) 'installed Go build runs'
+& $install -InstallDir $dir -Exe $env:AS_TEST_EXE -Autostart -NoStart
+Check ($proc.HasExited) 're-install stopped the running copy'
+
+# A Run entry that points elsewhere is not ours: uninstall must leave it alone.
+$proc = Start-Process (Join-Path $dir 'agentsemaphore.exe') -PassThru
+Start-Sleep -Seconds 3
+& (Join-Path $dir 'uninstall.ps1')
+Check ($proc.HasExited) 'uninstall stopped the Go build'
+Check (-not (Test-Path $dir)) 'install folder removed'
+Check (-not ((Get-ItemProperty -LiteralPath $runKey -ErrorAction SilentlyContinue).PSObject.Properties.Name -contains 'AgentSemaphore')) 'Run entry removed'
+New-ItemProperty -LiteralPath $runKey -Name AgentSemaphore -Value '"C:\elsewhere\agentsemaphore.exe"' -PropertyType String -Force | Out-Null
+& $install -InstallDir $dir -Exe $env:AS_TEST_EXE -NoStart
+& (Join-Path $dir 'uninstall.ps1')
+Check ((Get-ItemProperty -LiteralPath $runKey -Name AgentSemaphore).AgentSemaphore -eq '"C:\elsewhere\agentsemaphore.exe"') 'a Run entry pointing elsewhere is left alone'
+Remove-ItemProperty -LiteralPath $runKey -Name AgentSemaphore
+
 Write-Host 'All installer checks passed.'
