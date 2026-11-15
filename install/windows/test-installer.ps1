@@ -96,7 +96,7 @@ Start-Sleep -Seconds 3
 & (Join-Path $dir 'uninstall.ps1')
 Check ($proc.HasExited) 'uninstall stopped the Go build'
 Check (-not (Test-Path $dir)) 'install folder removed'
-Check (-not ((Get-ItemProperty -LiteralPath $runKey -ErrorAction SilentlyContinue).PSObject.Properties.Name -contains 'AgentSemaphore')) 'Run entry removed'
+Check ((Get-Item -LiteralPath $runKey).GetValueNames() -notcontains 'AgentSemaphore') 'Run entry removed'
 New-ItemProperty -LiteralPath $runKey -Name AgentSemaphore -Value '"C:\elsewhere\agentsemaphore.exe"' -PropertyType String -Force | Out-Null
 & $install -InstallDir $dir -Exe $env:AS_TEST_EXE -NoStart
 & (Join-Path $dir 'uninstall.ps1')
