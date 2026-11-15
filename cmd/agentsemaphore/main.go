@@ -55,9 +55,10 @@ func main() {
 			State    string          `json:"state"`
 			Tooltip  string          `json:"tooltip"`
 			Sessions []sessionJSON   `json:"sessions"`
+			Menu     []string        `json:"menu"`
 			Settings config.Settings `json:"settings"`
 			Warning  string          `json:"warning,omitempty"`
-		}{Version: version, Language: lang, State: v.State.String(), Tooltip: v.Tooltip, Settings: settings, Sessions: []sessionJSON{}}
+		}{Version: version, Language: lang, State: v.State.String(), Tooltip: v.Tooltip, Settings: settings, Sessions: []sessionJSON{}, Menu: menuRows(v)}
 		for _, s := range v.Sessions {
 			out.Sessions = append(out.Sessions, sessionJSON{s.Name, s.State.String(), s.Detail})
 		}
