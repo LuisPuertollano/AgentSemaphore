@@ -71,26 +71,24 @@ system language. Better translations are very welcome: see [`internal/i18n/local
 
 ## Install
 
-### Windows (prototype, works today)
+### Windows (x64 and ARM64)
 
-Per user, no admin rights, PowerShell 7. Includes a clean uninstall and an optional "silence Claude's
-pop-ups but keep the dot working".
+Per user, no admin rights, PowerShell 7. You get a clean uninstall and an optional "silence Claude's
+pop-ups but keep the dot working". From a clone of this repo:
 
 ```powershell
-pwsh -File install/windows/install.ps1 -Autostart -WhatIf   # see every change first
-pwsh -File install/windows/install.ps1 -Autostart
+pwsh -File install/windows/install.ps1 -FromRelease -Autostart -WhatIf   # see every change first
+pwsh -File install/windows/install.ps1 -FromRelease -Autostart
 ```
 
-Details: [install/windows](install/windows/README.md). If the dot hides behind the **^** arrow next to the
-clock, drag it onto the taskbar.
+This downloads the latest release for your machine: one small executable, nothing else to install. Details,
+the PowerShell prototype and the uninstaller: [install/windows](install/windows/README.md). If the dot hides
+behind the **^** arrow next to the clock, drag it onto the taskbar.
 
-### Windows, Linux, macOS (Go core, in progress)
+### Linux and macOS (in progress)
 
-One binary of about 7 MB with nothing else to install, built for Windows x64/ARM64, Linux x64/ARM64 and
-macOS. It reads Claude Code sessions everywhere and, on Windows, Claude Desktop's notifications. It does not
-need Python. Left-click the dot to open Claude; right-click for the menu (start at sign-in, flash the taskbar
-on red, quit). Every CI run uploads
-the binaries as artifacts. Releases will follow.
+The same Go core builds for Linux x64/ARM64 and macOS. It reads Claude Code sessions. Every CI run
+uploads the binaries as artifacts, and tagged versions are published as releases.
 
 ```sh
 go run ./cmd/agentsemaphore          # tray app

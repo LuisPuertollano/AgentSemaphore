@@ -1,0 +1,62 @@
+name: Release
+
+# Runs only when a version tag (v*) is pushed. Builds every binary and
+# publishes them as a GitHub release (marked pre-release while the version
+# has a suffix such as -alpha.1).
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { target: windows-amd64, os: ubuntu-latest, goos: windows, goarch: amd64, cgo: '0', ext: .exe, ldflags: -H=windowsgui }
+          - { target: windows-arm64, os: ubuntu-latest, goos: windows, goarch: arm64, cgo: '0', ext: .exe, ldflags: -H=windowsgui }
+          - { target: linux-amd64,   os: ubuntu-latest, goos: linux,   goarch: amd64, cgo: '0', ext: '',   ldflags: '' }
+          - { target: linux-arm64,   os: ubuntu-latest, goos: linux,   goarch: arm64, cgo: '0', ext: '',   ldflags: '' }
+          - { target: darwin-arm64,  os: macos-latest,  goos: darwin,  goarch: arm64, cgo: '1', ext: '',   ldflags: '' }
+          - { target: darwin-amd64,  os: macos-latest,  goos: darwin,  goarch: amd64, cgo: '1', ext: '',   ldflags: '' }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: ${{ matrix.cgo }}
+        run: go build -trimpath -ldflags "-s -w ${{ matrix.ldflags }} -X main.version=${GITHUB_REF_NAME}" -o "dist/agentsemaphore-${{ matrix.target }}${{ matrix.ext }}" ./cmd/agentsemaphore
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bin-${{ matrix.target }}
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          pattern: bin-*
+          merge-multiple: true
+      - name: Checksums
+        run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pre=""
+          case "$GITHUB_REF_NAME" in *-*) pre="--prerelease";; esac
+          gh release create "$GITHUB_REF_NAME" dist/* $pre --generate-notes \
+            --title "AgentSemaphore $GITHUB_REF_NAME"

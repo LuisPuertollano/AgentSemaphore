@@ -148,7 +148,14 @@ jobs:
           $r = @('install/windows', 'prototype/windows', 'tools/windows') | ForEach-Object { Invoke-ScriptAnalyzer -Path $_ -Recurse -Severity Error }
           $r | Format-Table -AutoSize
           if ($r) { exit 1 }
-      - name: Install, re-install, uninstall
-        run: ./install/windows/test-installer.ps1
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Build the Go tray for the installer test
+        run: go build -ldflags "-H=windowsgui" -o "$env:RUNNER_TEMP\agentsemaphore-windows-amd64.exe" ./cmd/agentsemaphore
+      - name: Install, re-install, uninstall (prototype and Go build)
+        run: |
+          $env:AS_TEST_EXE = "$env:RUNNER_TEMP\agentsemaphore-windows-amd64.exe"
+          ./install/windows/test-installer.ps1
       - name: estado.ps1 on Windows
         run: ./prototype/windows/tests/test-estado.ps1
