@@ -84,9 +84,11 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Build
-        run: go build -o "$env:RUNNER_TEMP\agentsemaphore.exe" ./cmd/agentsemaphore
+        run: |
+          go build -o "$env:RUNNER_TEMP\agentsemaphore.exe" ./cmd/agentsemaphore
+          go build -ldflags "-H=windowsgui" -o "$env:RUNNER_TEMP\agentsemaphore-gui.exe" ./cmd/agentsemaphore
       - name: Fake sessions, all colours, single instance, screenshot
-        run: ./tools/e2e/windows-e2e.ps1 -Exe "$env:RUNNER_TEMP\agentsemaphore.exe"
+        run: ./tools/e2e/windows-e2e.ps1 -Exe "$env:RUNNER_TEMP\agentsemaphore.exe" -TrayExe "$env:RUNNER_TEMP\agentsemaphore-gui.exe"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
