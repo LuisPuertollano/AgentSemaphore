@@ -29,7 +29,8 @@
         "needs your (response|input|approval)",
         "waiting for your",
         "would like access to",
-        "hit your .* limit"
+        "hit your .* limit",
+        "approve or deny"
       ],
       "ignorar": [
         "scheduled task (completed|finished)"
@@ -40,7 +41,8 @@
           "Claude is waiting for your input",
           "Scheduled task needs your approval",
           "Claude would like access to a folder",
-          "You've hit your Fable limit · resets Nov 15, 9pm (UTC). Switch to another model to continue."
+          "You've hit your Fable limit · resets Nov 15, 9pm (UTC). Switch to another model to continue.",
+          "Approve or deny AskUserQuestion"
         ],
         "ignorar": [
           "Scheduled task completed"
