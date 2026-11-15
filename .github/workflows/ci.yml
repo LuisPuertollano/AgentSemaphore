@@ -67,6 +67,38 @@ jobs:
           path: dist/
           retention-days: 14
 
+  e2e-windows:
+    name: Windows end-to-end (${{ matrix.os }})
+    needs: go
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-11-arm, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Build
+        run: |
+          go build -o "$env:RUNNER_TEMP\agentsemaphore.exe" ./cmd/agentsemaphore
+          go build -ldflags "-H=windowsgui" -o "$env:RUNNER_TEMP\agentsemaphore-gui.exe" ./cmd/agentsemaphore
+      - name: Fake sessions, all colours, single instance, screenshot
+        run: ./tools/e2e/windows-e2e.ps1 -Exe "$env:RUNNER_TEMP\agentsemaphore.exe" -TrayExe "$env:RUNNER_TEMP\agentsemaphore-gui.exe"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/e2e/*.png
+            ${{ runner.temp }}/e2e/*.log
+          if-no-files-found: ignore
+          retention-days: 14
+
   # Windows on Arm runners are free only for public repositories.
   go-windows-arm:
     name: Go tests (windows-11-arm)
