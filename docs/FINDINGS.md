@@ -146,8 +146,11 @@ matches no known phrase counts as red (better a red too many than a wrong green)
   **Rule adopted (5 of 5 consistent):** a silent toast with a Code-session header does not count as red.
   A known "needs you" phrase still wins, and any other unrecognised Claude toast is still red. Each silent
   summary is logged, so a misclassification would show up ([issue #22](https://github.com/LuisPuertollano/AgentSemaphore/issues/22)).
+- **Permission requests mid-turn do post a toast (2026-11-15).** A cloud session waiting for permission to use
+  AskUserQuestion posted *"Approve or deny AskUserQuestion"*, not silent. A question asked directly (no permission
+  step) posted nothing until the turn ended (2026-11-14 test).
 - So cloud and SSH sessions are partly visible: when a turn ends (including turns that end with a question in
-  plain text, #20), not while a permission or question dialog is open mid-turn.
+  plain text, #20) and when they ask for a permission; not while a direct question is open mid-turn.
 
 **Toast texts in other languages:** the Desktop package (`Claude_5.11492.5.0_arm64`, file `ion-dist.asar`)
 ships its UI strings in at least en, es, de, fr, it, pt, hi, id, ja and ko. `tools/windows/verify-phase1.ps1`
