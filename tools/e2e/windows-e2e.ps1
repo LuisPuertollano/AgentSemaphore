@@ -79,12 +79,29 @@ try {
       $p
     }
     function Menu { (Once).menu -join "`n" }
+    $hookDir = Join-Path $env:APPDATA 'AgentSemaphore\hooks'
+    $hookLog = Join-Path $env:APPDATA 'AgentSemaphore\hooks.log'
+    function Show-HookState([string]$why) {
+      Write-Host "--- $why"
+      $names = Get-ChildItem $hookDir -Filter *.json -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }
+      Write-Host "hook files: $($names -join ', ')"
+      if (Test-Path $hookLog) { Write-Host "hooks.log:"; Get-Content $hookLog -Tail 20 | ForEach-Object { Write-Host "  $_" } }
+    }
+
+    # Diagnostics (no assertion): the same hook, piped from PowerShell, into the GUI and the console build.
+    foreach ($b in @(@{ n = 'GUI'; x = $TrayExe; s = 'diag-gui' }, @{ n = 'console'; x = $Exe; s = 'diag-con' })) {
+      $j = '{"sessionId":"' + $b.s + '","cwd":"C:\\work\\' + $b.s + '"}'
+      $null = $j | & $b.x hook copilot agentStop
+      Start-Sleep -Milliseconds 500
+      Show-HookState "after piping into the $($b.n) build"
+    }
+    Remove-Item (Join-Path $hookDir '*.json') -ErrorAction SilentlyContinue
 
     $h1 = Start-Hook $copilot 'copilot' 'notification' '{"sessionId":"cp1","cwd":"C:\\work\\site","notification_type":"permission_prompt"}'
     $h2 = Start-Hook $codex 'codex' 'UserPromptSubmit' '{"session_id":"cx1","cwd":"C:\\work\\api"}'
     Start-Sleep -Seconds 4
     $s = Once
-    if ($s.state -ne 'red') { $s | ConvertTo-Json -Depth 5 | Write-Host }
+    if ($s.state -ne 'red') { $s | ConvertTo-Json -Depth 5 | Write-Host; Show-HookState 'red expected' }
     Check ($s.state -eq 'red') 'Copilot permission prompt (hook via PowerShell) -> red'
     Check ((Menu) -match 'Copilot . site.*permission prompt') 'menu shows the Copilot session and why'
     Check ((Menu) -match 'Codex . api') 'menu shows the Codex session'
