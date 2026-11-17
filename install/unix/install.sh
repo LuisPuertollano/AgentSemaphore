@@ -85,6 +85,25 @@ stop_running() {
 # True when the autostart entry starts our $DEST.
 autostart_is_ours() { [ -f "$AUTOFILE" ] && grep -qF "$DEST" "$AUTOFILE"; }
 
+# Newest published release, pre-releases included (GitHub's "latest" link skips
+# them). The API comes first; anonymous API calls are rate-limited per IP
+# (shared networks and CI hit that), so the public releases page is the fallback.
+API="${AGENTSEMAPHORE_RELEASES_API:-https://api.github.com/repos/$REPO/releases}"
+newest_release() {
+  local tag="" body="" auth=()
+  [ -n "${GITHUB_TOKEN:-}" ] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
+  # Whole responses first, then parse: with pipefail, a reader that stops
+  # early (grep -m1, head) makes curl fail and would discard a good answer.
+  body=$(curl -fsSL -H 'Accept: application/vnd.github+json' ${auth[@]+"${auth[@]}"} "$API?per_page=1" 2>/dev/null) || body=""
+  tag=$(printf '%s\n' "$body" | sed -nE '/"tag_name"/{s/.*"tag_name": *"([^"]+)".*/\1/p;}' | sed -n 1p)
+  if [ -z "$tag" ]; then
+    body=$(curl -fsSL "https://github.com/$REPO/releases" 2>/dev/null) || body=""
+    tag=$(printf '%s\n' "$body" | grep -oE "/$REPO/releases/tag/[^\"?#<]+" | sed -n '1{s#.*/##;p;}') || tag=""
+    [ -n "$tag" ] && echo "(found $tag on the releases page; the GitHub API did not answer)" >&2
+  fi
+  if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then echo "$tag"; fi
+}
+
 sha256() { if command -v sha256sum >/dev/null; then sha256sum "$1"; else shasum -a 256 "$1"; fi | cut -d' ' -f1; }
 
 # --- uninstall -----------------------------------------------------------------------
@@ -109,9 +128,7 @@ if [ -n "$EXE" ]; then
 else
   command -v curl >/dev/null || die "curl is needed to download the release"
   if [ -z "$VERSION" ]; then
-    # GitHub's "latest" skips pre-releases, so ask the API for the newest one.
-    VERSION=$(curl -fsSL -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$REPO/releases?per_page=1" |
-      grep -m1 '"tag_name"' | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/') || true
+    VERSION=$(newest_release)
     [ -n "$VERSION" ] || die "could not find a published release"
   fi
   base="https://github.com/$REPO/releases/download/$VERSION"

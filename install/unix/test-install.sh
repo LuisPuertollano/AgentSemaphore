@@ -79,6 +79,12 @@ if [ -n "$TAG" ]; then
   bash "$INSTALL" --no-start | tee "$WORK/out.txt"
   grep -q 'SHA-256 checked' "$WORK/out.txt" || fail 'newest release: download is checked'
   ok "newest release downloaded and checked: $("$DEST" -version)"
+  # Same without the API (rate limits): found on the releases page instead.
+  AGENTSEMAPHORE_RELEASES_API="https://api.github.com/repos/LuisPuertollano/AgentSemaphore/no-such-endpoint" \
+    bash "$INSTALL" --no-start 2>&1 | tee "$WORK/out.txt"
+  grep -q 'on the releases page' "$WORK/out.txt" || fail 'newest release found without the API'
+  grep -q 'SHA-256 checked' "$WORK/out.txt" || fail 'fallback: download is checked'
+  ok 'newest release found on the releases page when the API does not answer'
   bash "$INSTALL" --uninstall
 fi
 

@@ -126,6 +126,8 @@ jobs:
       - name: Fake sessions, all colours, tray (read back over D-Bus on Linux), single instance
         run: ./tools/e2e/unix-e2e.sh "$RUNNER_TEMP/bin/agentsemaphore" "$RUNNER_TEMP/bin/snwatcher"
       - name: Installer (install.sh), including the v0.1.0-alpha.1 download
+        env:
+          GITHUB_TOKEN: ${{ github.token }}   # anonymous API calls are rate-limited per IP on shared runners
         run: ./install/unix/test-install.sh "$RUNNER_TEMP/bin/agentsemaphore" v0.1.0-alpha.1
       - uses: actions/upload-artifact@v7
         if: always()
@@ -194,7 +196,9 @@ jobs:
           go-version-file: go.mod
       - name: Build the Go tray for the installer test
         run: go build -ldflags "-H=windowsgui" -o "$env:RUNNER_TEMP\agentsemaphore-windows-amd64.exe" ./cmd/agentsemaphore
-      - name: Install, re-install, uninstall (prototype and Go build)
+      - name: Install, re-install, uninstall (prototype and Go build); finding releases
+        env:
+          GITHUB_TOKEN: ${{ github.token }}   # anonymous API calls are rate-limited per IP on shared runners
         run: |
           $env:AS_TEST_EXE = "$env:RUNNER_TEMP\agentsemaphore-windows-amd64.exe"
           ./install/windows/test-installer.ps1
