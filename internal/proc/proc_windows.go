@@ -27,3 +27,7 @@ func name(pid int) (string, bool) {
 	}
 	return filepath.Base(windows.UTF16ToString(buf[:size])), true
 }
+
+func startTicks(int) (uint64, bool) { return 0, false }
+
+func domain() string { return "" }

@@ -118,6 +118,19 @@ kill "$P1"; wait "$P1" 2>/dev/null || true
 [ "$(state)" = green ] || fail 'session of an exited process is ignored -> green'
 ok 'session of an exited process is ignored -> green'
 
+# Linux: procStart (start time in /proc/<pid>/stat, field 22) catches a reused pid.
+if [ "$(uname -s)" = Linux ] && [ -r /etc/machine-id ]; then
+  dom="linux:$(cat /etc/machine-id):$(readlink /proc/self/ns/pid)"
+  ticks=$(sed 's/.*) //' "/proc/$P2/stat" | awk '{print $20}')
+  printf '{"pid": %s, "name": "e2e-same", "status": "busy", "procStart": "%s", "pidDomain": "%s"}\n' "$P2" "$ticks" "$dom" > "$SES/$P2.json"
+  [ "$(state)" = orange ] || { once; fail 'procStart matches the running process -> session shown'; }
+  ok 'procStart matches the running process -> session shown'
+  printf '{"pid": %s, "name": "e2e-reused", "status": "waiting", "procStart": "%s", "pidDomain": "%s"}\n' "$P2" "$((ticks + 1))" "$dom" > "$SES/$P2.json"
+  [ "$(state)" = green ] || { once; fail 'procStart of an older process -> reused pid, session ignored'; }
+  ok 'procStart of an older process -> reused pid, session ignored'
+  write_session "$P2" e2e-idle idle
+fi
+
 # --- tray: single instance --------------------------------------------------------------
 write_session "$P0" e2e-wait waiting 'permission prompt'
 case "$(uname -s)" in

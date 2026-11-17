@@ -3,7 +3,8 @@
 //
 // Rules (same as the Windows prototype):
 //   - status waiting → red, busy/shell → orange, idle → green, anything else → grey;
-//   - a file whose pid is not a running Claude Code process is ignored;
+//   - a file whose pid is not a running Claude Code process is ignored, and on
+//     Linux also one whose procStart shows the pid now belongs to a newer process;
 //   - a file without a pid, or unreadable 3 polls in a row, is grey;
 //   - a missing sessions folder means Claude Code is absent, not an error.
 package claudecode
@@ -16,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -43,6 +45,10 @@ type Source struct {
 	IsAgent func(pid int) bool
 	// Now defaults to time.Now; tests replace it.
 	Now func() time.Time
+	// StartOf and LocalDomain default to proc.StartTicks and proc.Domain;
+	// tests replace them.
+	StartOf     func(pid int) (uint64, bool)
+	LocalDomain *string
 
 	failures  map[string]int
 	lastGood  map[string]file
@@ -55,6 +61,8 @@ type file struct {
 	Cwd        string `json:"cwd"`
 	Status     string `json:"status"`
 	WaitingFor string `json:"waitingFor"`
+	ProcStart  string `json:"procStart"`
+	PidDomain  string `json:"pidDomain"`
 }
 
 // New returns a source for the current user's ~/.claude/sessions.
@@ -142,6 +150,8 @@ func (s *Source) Poll() source.Result {
 			continue
 		case !isAgent(f.Pid):
 			continue // closed session or reused pid
+		case s.pidReused(f):
+			continue // the pid now belongs to a newer process (Claude Code restarted, or another program)
 		}
 		if f.Status == "" {
 			if _, ok := s.firstSeen[key]; !ok {
@@ -171,6 +181,29 @@ func (s *Source) Poll() source.Result {
 	}
 	sort.Slice(res.Sessions, func(i, j int) bool { return res.Sessions[i].Name < res.Sessions[j].Name })
 	return res
+}
+
+// pidReused uses procStart, the process start time Claude Code records, when
+// its meaning is known: Linux, same machine and PID namespace (pidDomain).
+// Anywhere else it never decides; the process-name check still applies.
+func (s *Source) pidReused(f file) bool {
+	local := proc.Domain()
+	if s.LocalDomain != nil {
+		local = *s.LocalDomain
+	}
+	if f.ProcStart == "" || local == "" || !strings.HasPrefix(local, "linux:") || f.PidDomain != local {
+		return false
+	}
+	want, err := strconv.ParseUint(f.ProcStart, 10, 64)
+	if err != nil {
+		return false
+	}
+	startOf := proc.StartTicks
+	if s.StartOf != nil {
+		startOf = s.StartOf
+	}
+	got, ok := startOf(f.Pid)
+	return ok && got != want
 }
 
 func displayName(f file) string {

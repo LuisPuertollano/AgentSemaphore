@@ -129,3 +129,38 @@ func TestEmptyStatusWhileStartingDoesNotFlashGrey(t *testing.T) {
 		t.Fatalf("got %v", got)
 	}
 }
+
+func TestProcStartCatchesReusedPid(t *testing.T) {
+	dir := t.TempDir()
+	const dom = "linux:abc123:pid:[4026531836]"
+	write(t, dir, "101.json", `{"pid":101,"name":"same","status":"waiting","procStart":"205","pidDomain":"`+dom+`"}`)
+	write(t, dir, "102.json", `{"pid":102,"name":"reused","status":"waiting","procStart":"205","pidDomain":"`+dom+`"}`)
+	write(t, dir, "103.json", `{"pid":103,"name":"other-namespace","status":"busy","procStart":"205","pidDomain":"linux:abc123:pid:[999]"}`)
+	write(t, dir, "104.json", `{"pid":104,"name":"no-procstart","status":"idle","pidDomain":"`+dom+`"}`)
+	write(t, dir, "105.json", `{"pid":105,"name":"odd-procstart","status":"idle","procStart":"2026-11-17T10:00:00Z","pidDomain":"`+dom+`"}`)
+	src := newSource(dir)
+	local := dom
+	src.LocalDomain = &local
+	src.StartOf = func(pid int) (uint64, bool) {
+		if pid == 102 {
+			return 9999, true // a newer process got pid 102
+		}
+		return 205, true
+	}
+	got := byName(src.Poll())
+	for _, name := range []string{"same", "other-namespace", "no-procstart", "odd-procstart"} {
+		if _, ok := got[name]; !ok {
+			t.Errorf("%s: must still be shown", name)
+		}
+	}
+	if _, ok := got["reused"]; ok {
+		t.Error("reused pid: the old session must be ignored")
+	}
+
+	// Outside Linux (or unknown domain) procStart never decides.
+	empty := ""
+	src.LocalDomain = &empty
+	if _, ok := byName(src.Poll())["reused"]; !ok {
+		t.Error("without a known local domain the session must be shown")
+	}
+}

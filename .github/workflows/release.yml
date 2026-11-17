@@ -4,8 +4,8 @@ name: Release
 # pre-release while the version has a suffix such as -alpha.1). Starts when
 # a version tag (v*) is pushed, or by hand from the Actions tab ("Run
 # workflow" on main, with the version to create; the tag is made on the
-# commit being built). Afterwards the installer downloads that release on
-# Windows x64 and ARM64 and checks it.
+# commit being built). Afterwards the installers download that release on
+# Windows x64/ARM64, Linux x64/ARM64 and macOS and check it.
 on:
   push:
     tags: ['v*']
@@ -86,6 +86,30 @@ jobs:
           gh release create "$VERSION" dist/* $pre --generate-notes \
             --target "$GITHUB_SHA" --title "AgentSemaphore $VERSION"
 
+  verify-unix:
+    name: Install the release (${{ matrix.os }})
+    needs: publish
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: install.sh --version, then the newest, autostart, uninstall
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          export HOME="$RUNNER_TEMP/home"; mkdir -p "$HOME"
+          bash install/unix/install.sh --version "$VERSION" --autostart --no-start
+          got=$("$HOME/.local/bin/agentsemaphore" -version)
+          echo "Installed: $got"
+          [ "$got" = "agentsemaphore $VERSION" ] || { echo "expected agentsemaphore $VERSION"; exit 1; }
+          bash install/unix/install.sh --no-start | tee out.txt
+          grep -q 'SHA-256 checked' out.txt
+          bash install/unix/install.sh --uninstall
+          [ ! -e "$HOME/.local/bin/agentsemaphore" ]
+
   verify:
     name: Install the release (${{ matrix.os }})
     needs: publish
@@ -98,6 +122,8 @@ jobs:
       - uses: actions/checkout@v5
       - name: install.ps1 -FromRelease, then uninstall
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = 'Stop'
           $dir = Join-Path $env:RUNNER_TEMP 'AgentSemaphore-release'
