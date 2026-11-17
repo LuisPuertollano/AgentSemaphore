@@ -61,6 +61,10 @@ func runTray(cfg trayConfig) {
 	systray.Run(func() { onReady(cfg) }, func() { cfg.log.Println("exit") })
 }
 
+// resendIcon reports whether refresh number tick re-sends an unchanged icon:
+// every tick for the first 10, then every 30th.
+func resendIcon(tick int) bool { return tick <= 10 || tick%30 == 0 }
+
 func iconBytes(s state.State) []byte {
 	p := icon.PNG(s)
 	if runtime.GOOS == "windows" {
@@ -147,10 +151,18 @@ func onReady(cfg trayConfig) {
 
 	cfg.log.Printf("start, %d source(s), language %s, every %v", len(cfg.sources), cfg.lang, cfg.interval)
 	prev := state.State(-1)
+	tick := 0
 	refresh := func() {
 		v := poll(cfg.sources, cfg.lang)
-		if v.State != prev {
+		tick++
+		// fyne.io/systray on Linux keeps, but never publishes, an icon set while it
+		// is still exporting its D-Bus objects. Seen in CI on Ubuntu 26.04: the
+		// tooltip said "1 waiting" while the dot stayed grey. So the icon is also
+		// re-sent during the first ticks and then now and then, not only on change.
+		if v.State != prev || resendIcon(tick) {
 			systray.SetIcon(iconBytes(v.State))
+		}
+		if v.State != prev {
 			cfg.log.Printf("%-6s %s", v.State, summary(v))
 			if v.State == state.Red && flashOn.Load() && desktop.CanFlash() {
 				desktop.FlashClaude()
