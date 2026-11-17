@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # End-to-end test of the Go core on Linux and macOS (CI runners). No Claude
 # installation is needed:
-#  - fake "claude" processes (a copy of `sleep`) and fake session files drive
+#  - fake "claude" processes (tools/e2e/fakeclaude) and fake session files drive
 #    the Claude Code source through every colour (-once);
 #  - the tray is started twice to check the single-instance lock;
 #  - Linux: on a private session bus, a minimal StatusNotifierWatcher
@@ -25,6 +25,9 @@ fail() { echo "FAILED: $*" >&2; exit 1; }
 if [ "$MODE" = main ]; then
   [ -n "${CI:-}" ] || fail "refusing to run outside CI (set CI=1 to run it on purpose; it only touches $OUT)"
   rm -rf "$OUT"; mkdir -p "$OUT/home" "$OUT/tmp" "$OUT/fake"
+  # Built before HOME moves, so Go uses the real module and build caches.
+  ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+  (cd "$ROOT" && go build -o "$OUT/fake/claude" ./tools/e2e/fakeclaude) || fail 'build the fake claude process'
 fi
 export HOME="$OUT/home" TMPDIR="$OUT/tmp" E2E_OUT="$OUT"
 unset XDG_CONFIG_HOME
@@ -83,13 +86,14 @@ if [ "$MODE" = tray-linux ]; then
 fi
 
 # --- fake Claude Code sessions (-once) -------------------------------------------------
-cp "$(command -v sleep)" "$OUT/fake/claude"
-"$OUT/fake/claude" 600 & P0=$!
-"$OUT/fake/claude" 600 & P1=$!
-"$OUT/fake/claude" 600 & P2=$!
+"$OUT/fake/claude" & P0=$!
+"$OUT/fake/claude" & P1=$!
+"$OUT/fake/claude" & P2=$!
 cleanup() { kill "$P0" "$P1" "$P2" 2>/dev/null || true; [ -n "${TRAY:-}" ] && kill "$TRAY" 2>/dev/null || true; }
 trap cleanup EXIT
 sleep 0.5
+for p in "$P0" "$P1" "$P2"; do kill -0 "$p" 2>/dev/null || fail "fake claude process $p is running"; done
+ok 'fake claude processes are running'
 
 [ "$(state)" = green ] || fail 'no sessions -> green'; ok 'no sessions -> green'
 once | json '"\n".join(d["menu"])' | grep -q 'Claude Code' || fail 'menu names the Claude Code source'
