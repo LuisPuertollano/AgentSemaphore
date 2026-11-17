@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+# The e2e and binary jobs build what they need themselves, so they do not wait
+# for the unit-test matrix: a macOS runner that never starts (seen 2026-11-17)
+# must not hide the Linux and Windows results. Every job must still pass to merge.
+
 jobs:
   go:
     name: Go tests (${{ matrix.os }})
@@ -38,7 +42,6 @@ jobs:
 
   binaries:
     name: Binaries (${{ matrix.target }})
-    needs: go
     strategy:
       fail-fast: false
       matrix:
@@ -69,7 +72,6 @@ jobs:
 
   e2e-windows:
     name: Windows end-to-end (${{ matrix.os }})
-    needs: go
     strategy:
       fail-fast: false
       matrix:
@@ -101,7 +103,6 @@ jobs:
 
   e2e-unix:
     name: ${{ matrix.name }} end-to-end
-    needs: go
     strategy:
       fail-fast: false
       matrix:
