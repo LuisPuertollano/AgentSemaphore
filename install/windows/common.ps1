@@ -127,13 +127,34 @@ $ReleasesApi = 'https://api.github.com/repos/LuisPuertollano/AgentSemaphore/rele
 
 # The release with tag $tag, or the newest published one. Pre-releases count:
 # GitHub's own "latest" link skips them, and early versions are all pre-releases.
+# The API comes first (with $env:GITHUB_TOKEN if set). Anonymous API calls are
+# rate-limited per IP, so without an answer the tag comes from the public
+# releases page and the asset links are built from it.
 function Get-Release([string]$tag) {
+  $api = if ($env:AGENTSEMAPHORE_RELEASES_API) { $env:AGENTSEMAPHORE_RELEASES_API } else { $ReleasesApi }
   $headers = @{ Accept = 'application/vnd.github+json'; 'User-Agent' = 'AgentSemaphore-installer' }
-  if ($tag) { return Invoke-RestMethod -Uri "$ReleasesApi/tags/$tag" -Headers $headers }
-  $all = Invoke-RestMethod -Uri "$ReleasesApi`?per_page=20" -Headers $headers
-  $rel = $all | Where-Object { -not $_.draft } | Sort-Object { [datetime]$_.published_at } -Descending | Select-Object -First 1
-  if (-not $rel) { throw 'No published release found.' }
-  $rel
+  if ($env:GITHUB_TOKEN) { $headers.Authorization = "Bearer $env:GITHUB_TOKEN" }
+  try {
+    if ($tag) { return Invoke-RestMethod -Uri "$api/tags/$tag" -Headers $headers }
+    $all = Invoke-RestMethod -Uri "$api`?per_page=20" -Headers $headers
+    $rel = $all | Where-Object { -not $_.draft } | Sort-Object { [datetime]$_.published_at } -Descending | Select-Object -First 1
+    if ($rel) { return $rel }
+  } catch {
+    Write-Host "The GitHub API did not answer ($($_.Exception.Message)); using the releases page."
+  }
+  if (-not $tag) {
+    $page = (Invoke-WebRequest -Uri 'https://github.com/LuisPuertollano/AgentSemaphore/releases' -UseBasicParsing).Content
+    $m = [regex]::Match([string]$page, '/LuisPuertollano/AgentSemaphore/releases/tag/(v\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)')
+    if (-not $m.Success) { throw 'No published release found.' }
+    $tag = $m.Groups[1].Value
+    Write-Host "Found $tag on the releases page."
+  }
+  $base = "https://github.com/LuisPuertollano/AgentSemaphore/releases/download/$tag"
+  [pscustomobject]@{
+    tag_name = $tag
+    assets   = @('agentsemaphore-windows-amd64.exe', 'agentsemaphore-windows-arm64.exe', 'SHA256SUMS.txt') |
+      ForEach-Object { [pscustomobject]@{ name = $_; browser_download_url = "$base/$_" } }
+  }
 }
 
 # Downloads asset $name of release $rel to $dest and checks it against the

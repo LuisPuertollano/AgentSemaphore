@@ -103,4 +103,20 @@ New-ItemProperty -LiteralPath $runKey -Name AgentSemaphore -Value '"C:\elsewhere
 Check ((Get-ItemProperty -LiteralPath $runKey -Name AgentSemaphore).AgentSemaphore -eq '"C:\elsewhere\agentsemaphore.exe"') 'a Run entry pointing elsewhere is left alone'
 Remove-ItemProperty -LiteralPath $runKey -Name AgentSemaphore
 
+# 7. Finding the newest release: through the API, and through the releases page
+#    when the API does not answer (anonymous API calls are rate-limited per IP).
+$tagPattern = '^v\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$'
+$rel = Get-Release ''
+Check ($rel.tag_name -match $tagPattern) "newest release through the API: $($rel.tag_name)"
+$env:AGENTSEMAPHORE_RELEASES_API = 'https://api.github.com/repos/LuisPuertollano/AgentSemaphore/no-such-endpoint'
+try {
+  $fallback = Get-Release ''
+  Check ($fallback.tag_name -eq $rel.tag_name) "same release found on the releases page: $($fallback.tag_name)"
+  $dl = Join-Path $env:RUNNER_TEMP 'fallback-download.exe'
+  Save-ReleaseAsset $fallback 'agentsemaphore-windows-amd64.exe' $dl
+  Check (Test-Path $dl) 'download through the page fallback passes the SHA-256 check'
+} finally {
+  Remove-Item Env:AGENTSEMAPHORE_RELEASES_API
+}
+
 Write-Host 'All installer checks passed.'

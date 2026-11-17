@@ -72,3 +72,17 @@ func TestMenuRowsShowEachSourceAndWhatIsNotVisible(t *testing.T) {
 		}
 	}
 }
+
+func TestResendIcon(t *testing.T) {
+	for tick := 1; tick <= 10; tick++ {
+		if !resendIcon(tick) {
+			t.Fatalf("tick %d: start-up ticks must re-send the icon", tick)
+		}
+	}
+	if resendIcon(11) || resendIcon(29) {
+		t.Fatal("after start-up, only every 30th tick re-sends")
+	}
+	if !resendIcon(30) || !resendIcon(60) {
+		t.Fatal("every 30th tick re-sends")
+	}
+}

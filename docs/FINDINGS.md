@@ -189,3 +189,13 @@ claude-sessions, ClaudePulse-win, ClaudeTaskbar) and several macOS menu-bar ones
 ccemaphore, Claude Status Bar). None covers Claude **chat/Cowork** from the Desktop app, most rely
 on the `Notification` hook that fails in Desktop, and none offers multi-agent + cross-platform in one
 free tool. That is the gap this project targets.
+
+## Linux tray: an icon set during start-up can be lost (2026-11-17)
+
+Seen in CI on both Linux runners (x64 on Ubuntu 26.04, and ARM64); not reproduced locally on Ubuntu 24.04 x64. Over D-Bus
+the tray's tooltip and menu said "1 waiting" while its `IconPixmap` stayed grey for 20 s. In
+fyne.io/systray v1.12.2, `SetIcon` only stores the icon while the StatusNotifierItem properties are
+still being exported. When it lands between building the property set and publishing it, the
+icon is never sent. The tray now re-sends the icon on every tick for the first ten seconds and
+then every 30 s, not only when the state changes. `tools/e2e/unix-e2e.sh` reads the icon back
+over D-Bus and catches this.
