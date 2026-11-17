@@ -47,3 +47,21 @@ func name(pid int) (string, bool) {
 	}
 	return strings.TrimSpace(string(b)), true
 }
+
+func parent(pid int) (int, bool) {
+	b, err := os.ReadFile("/proc/" + strconv.Itoa(pid) + "/stat")
+	if err != nil {
+		return 0, false
+	}
+	s := string(b)
+	i := strings.LastIndexByte(s, ')')
+	if i < 0 {
+		return 0, false
+	}
+	f := strings.Fields(s[i+1:])
+	if len(f) < 2 {
+		return 0, false
+	}
+	pp, err := strconv.Atoi(f[1]) // field 4: ppid
+	return pp, err == nil
+}

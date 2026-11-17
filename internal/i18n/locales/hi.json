@@ -17,6 +17,7 @@
   "reason.toast": "चैट/Cowork",
   "source.claudeCode": "Claude Code सत्र",
   "source.claudeDesktopToasts": "Claude Desktop सूचनाएँ",
+  "source.agentHooks": "अन्य एजेंट (Copilot, Codex, Gemini CLI)",
   "source.error": "{source}: पढ़ा नहीं जा सका ({detail})",
   "menu.sourceNothing": "कुछ भी लंबित नहीं",
   "menu.sourceAbsent": "इस सिस्टम पर नहीं मिला",

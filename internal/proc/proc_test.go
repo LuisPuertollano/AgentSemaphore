@@ -43,3 +43,15 @@ func TestStartTicksAndDomain(t *testing.T) {
 		t.Fatalf("domain %q", d)
 	}
 }
+
+func TestParent(t *testing.T) {
+	if _, ok := Parent(0); ok {
+		t.Fatal("pid 0 has a parent")
+	}
+	pp, ok := Parent(os.Getpid())
+	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+		if !ok || pp != os.Getppid() {
+			t.Fatalf("Parent(self) = %d %v, want %d", pp, ok, os.Getppid())
+		}
+	}
+}

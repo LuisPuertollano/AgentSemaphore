@@ -36,3 +36,11 @@ func StartTicks(pid int) (uint64, bool) {
 // A pid from another machine or PID namespace cannot be checked here. Empty
 // where unknown.
 func Domain() string { return domain() }
+
+// Parent returns the parent process id of a running process.
+func Parent(pid int) (int, bool) {
+	if pid <= 0 {
+		return 0, false
+	}
+	return parent(pid)
+}

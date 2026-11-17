@@ -6,6 +6,10 @@
 //	agentsemaphore -version   print the version and exit
 //	agentsemaphore -autostart on|off
 //	                          start this executable at sign-in, or remove that entry, and exit
+//	agentsemaphore hooks install|uninstall|status|show copilot|codex|gemini
+//	                          register this program in another agent's hook system
+//	agentsemaphore hook <agent> <event>
+//	                          what those hooks run (event JSON on stdin); always exits 0
 package main
 
 import (
@@ -26,6 +30,7 @@ import (
 	"github.com/LuisPuertollano/AgentSemaphore/internal/single"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source/claudecode"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/source/hooks"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source/toasts"
 )
 
@@ -33,6 +38,14 @@ import (
 var version = "dev"
 
 func main() {
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "hook":
+			os.Exit(runHook(os.Args[2:]))
+		case "hooks":
+			os.Exit(runHooks(os.Args[2:]))
+		}
+	}
 	once := flag.Bool("once", false, "read all sources once, print JSON and exit")
 	showVersion := flag.Bool("version", false, "print the version and exit")
 	autostartFlag := flag.String("autostart", "", `"on": start this executable at sign-in; "off": remove that entry; then exit`)
@@ -130,6 +143,9 @@ func buildSources(s config.Settings, logger *log.Logger) []source.Source {
 	var out []source.Source
 	if s.Sources.ClaudeCode {
 		out = append(out, claudecode.New())
+	}
+	if s.Sources.AgentHooks {
+		out = append(out, hooks.New())
 	}
 	if s.Sources.ClaudeDesktopToasts {
 		ts := &toasts.Source{P: toasts.NewPlatform()}

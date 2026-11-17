@@ -16,7 +16,7 @@
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
   <img src="https://img.shields.io/badge/status-pre--alpha-orange" alt="pre-alpha">
   <img src="https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078d4" alt="Windows x64 and ARM64">
-  <img src="https://img.shields.io/badge/Linux%20%26%20macOS-in%20progress-lightgrey" alt="Linux and macOS in progress">
+  <img src="https://img.shields.io/badge/Linux%20%26%20macOS-alpha%2C%20CI--tested-lightgrey" alt="Linux and macOS: alpha, CI-tested">
 </p>
 
 > [!WARNING]
@@ -46,7 +46,8 @@ The worst state across all sessions wins. Hover for a summary, click for the lis
   <img src="docs/images/how-it-works.svg" width="760" alt="Diagram: read-only sources feed one aggregate state, shown as the tray dot">
 </p>
 
-- **Read-only.** It reads what the agents already write. It never changes an agent's settings and needs no hooks.
+- **Read-only.** For Claude it reads what Claude already writes: no hooks, no settings changed. For Copilot,
+  Codex and Gemini CLI it can register an observer hook, only when you ask for it ([docs/AGENTS.md](docs/AGENTS.md)).
 - **Local and private.** No accounts, no servers, no telemetry. Nothing leaves your machine.
 - **Fails soft.** If a format changes upstream, the dot turns grey and the tooltip says which source; it never shows a wrong green.
 
@@ -56,11 +57,12 @@ The worst state across all sessions wins. Hover for a summary, click for the lis
 |---|---|---|
 | Claude Code, CLI and Desktop **Code** tab, on this machine | ✅ red / orange / green, live | Claude Code's own session files |
 | Claude **chat, Cowork, scheduled tasks** (Claude Desktop) | 🔴 only when they need you | Desktop's notifications (Windows) |
+| **GitHub Copilot CLI, OpenAI Codex CLI, Gemini CLI** (optional hooks) | 🧪 red / orange / green, from their hook events; not yet tested with the real CLIs | `agentsemaphore hooks install …` ([details](docs/AGENTS.md)) |
 | Claude Code **in the cloud** or **on another machine over SSH** | 🔴 when a turn ends and needs you (silent progress summaries are ignored) | Desktop's notifications (Windows) |
 | …the same, while it asks for a permission mid-turn | 🔴 | Desktop's notifications (Windows) |
 | …the same, while a direct question is open mid-turn | ❌ not yet | no local signal ([#22](https://github.com/LuisPuertollano/AgentSemaphore/issues/22), [#24](https://github.com/LuisPuertollano/AgentSemaphore/issues/24)) |
 | A session that ends its turn with a question in plain text | 🟢 shows idle | known gap ([#20](https://github.com/LuisPuertollano/AgentSemaphore/issues/20)) |
-| Gemini CLI, Codex CLI, Copilot CLI, … | ⏳ planned | [Phase 3](https://github.com/LuisPuertollano/AgentSemaphore/issues/4) |
+| Other agents | ⏳ planned, ideas welcome | [Phase 3](https://github.com/LuisPuertollano/AgentSemaphore/issues/4) |
 
 Everything measured so far, including what is broken upstream, is in [docs/FINDINGS.md](docs/FINDINGS.md).
 
@@ -102,7 +104,7 @@ daily yet: if you do, a quick test report is very welcome.
 
 1. ✅ Harden the Windows prototype
 2. 🚧 Cross-platform core: ✅ Windows · 🚧 Linux and macOS (installer and CI tests done; real-desktop reports wanted)
-3. ⏳ More agents (Gemini CLI, Codex CLI, Copilot CLI, …)
+3. 🚧 More agents: Copilot CLI, Codex CLI and Gemini CLI through their hooks (built and CI-tested, real-CLI reports wanted)
 4. ⏳ Optional view of your subscription usage, from local data only
 5. ⏳ Public release with a landing page
 

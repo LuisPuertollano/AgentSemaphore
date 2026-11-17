@@ -47,6 +47,9 @@ type Settings struct {
 type Sources struct {
 	ClaudeCode          bool `json:"claudeCode"`
 	ClaudeDesktopToasts bool `json:"claudeDesktopToasts"`
+	// AgentHooks: Copilot, Codex and Gemini CLI sessions reported by their hooks
+	// (only once the user has installed ours: agentsemaphore hooks install ...).
+	AgentHooks bool `json:"agentHooks"`
 }
 
 // Defaults returns the settings used when there is no file or a key is missing.
@@ -58,6 +61,7 @@ func Defaults() Settings {
 		Sources: Sources{
 			ClaudeCode:          true,
 			ClaudeDesktopToasts: true,
+			AgentHooks:          true,
 		},
 	}
 }

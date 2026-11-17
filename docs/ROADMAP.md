@@ -64,9 +64,17 @@ Next:
   extension (Ubuntu enables it by default); other desktops are untested so far. In CI where
   possible, otherwise by user reports.
 
-## Phase 3 — More agents
-- Gemini CLI, OpenAI Codex CLI, GitHub Copilot CLI, others with hooks or state files.
-- One source module per agent; additive hook install/uninstall.
+## Phase 3 — More agents 🚧
+- ✅ One generic hook source (`internal/source/hooks`): the agent runs
+  `agentsemaphore hook <agent> <event>`; one file per session; the agent's process is recorded so a
+  crashed session disappears; a pure observer (no output, exit 0).
+- ✅ GitHub Copilot CLI and OpenAI Codex CLI: `agentsemaphore hooks install|uninstall|status`.
+  Copilot gets its own hook file; for Codex our entries are added next to the user's in `hooks.json`.
+  Gemini CLI: the snippet is printed, because its hooks live in the user's main `settings.json`.
+- ✅ Event meanings from the vendors' documentation, with sources and gaps in
+  [docs/AGENTS.md](AGENTS.md). Tested in CI with simulated hook calls under fake agent processes.
+- Next: reports from real Copilot, Codex and Gemini CLI users; Codex questions (`request_user_input`);
+  more agents.
 
 ## Phase 4 — Subscription usage (long term)
 - Optional panel with plan usage per provider, only from data the user's own tools already hold locally.
