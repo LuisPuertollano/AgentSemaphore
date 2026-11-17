@@ -65,14 +65,15 @@ try {
 
   # --- other agents through their hooks ----------------------------------------------
   # Copilot runs a hook's "powershell" command through PowerShell, so the chain is
-  # agent -> pwsh -> agentsemaphore. The GUI build is used: that is what users install.
+  # agent -> pwsh -> agentsemaphore. Hooks run the console build (agentsemaphore-cli.exe):
+  # piped from PowerShell, the GUI build gets no stdin (measured here, see docs/FINDINGS.md).
   if ($FakeAgent) {
     $copilot = Join-Path $fakeDir 'copilot.exe'; Copy-Item $FakeAgent $copilot
     $codex = Join-Path $fakeDir 'codex.exe'; Copy-Item $FakeAgent $codex
     $pwshExe = (Get-Process -Id $PID).Path
     $hookProcs = [System.Collections.Generic.List[object]]::new()
     function Start-Hook([string]$agentExe, [string]$agent, [string]$event, [string]$json) {
-      $cmd = "'$json' | & '$TrayExe' hook $agent $event"
+      $cmd = "'$json' | & '$Exe' hook $agent $event"
       $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))
       $p = Start-Process $agentExe -ArgumentList @($pwshExe, '-NoProfile', '-EncodedCommand', $b64) -WindowStyle Hidden -PassThru
       $hookProcs.Add($p)
@@ -88,14 +89,6 @@ try {
       if (Test-Path $hookLog) { Write-Host "hooks.log:"; Get-Content $hookLog -Tail 20 | ForEach-Object { Write-Host "  $_" } }
     }
 
-    # Diagnostics (no assertion): the same hook, piped from PowerShell, into the GUI and the console build.
-    foreach ($b in @(@{ n = 'GUI'; x = $TrayExe; s = 'diag-gui' }, @{ n = 'console'; x = $Exe; s = 'diag-con' })) {
-      $j = '{"sessionId":"' + $b.s + '","cwd":"C:\\work\\' + $b.s + '"}'
-      $null = $j | & $b.x hook copilot agentStop
-      Start-Sleep -Milliseconds 500
-      Show-HookState "after piping into the $($b.n) build"
-    }
-    Remove-Item (Join-Path $hookDir '*.json') -ErrorAction SilentlyContinue
 
     $h1 = Start-Hook $copilot 'copilot' 'notification' '{"sessionId":"cp1","cwd":"C:\\work\\site","notification_type":"permission_prompt"}'
     $h2 = Start-Hook $codex 'codex' 'UserPromptSubmit' '{"session_id":"cx1","cwd":"C:\\work\\api"}'
@@ -118,9 +111,9 @@ try {
     Start-Sleep -Seconds 4
     Check ((Once).state -eq 'green') 'Codex session end -> session removed -> green'
 
-    $out = '{"session_id":"g1"}' | & $TrayExe hook gemini SessionStart
-    Check ("$out".Trim() -eq '{}') "Gemini hook prints {} from the GUI build (got '$out')"
-    $null = 'garbage' | & $TrayExe hook codex Stop
+    $out = '{"session_id":"g1"}' | & $Exe hook gemini SessionStart
+    Check ("$out".Trim() -eq '{}') "Gemini hook prints {} (got '$out')"
+    $null = 'garbage' | & $Exe hook codex Stop
     Check ($LASTEXITCODE -eq 0) 'bad hook input: exit 0'
 
     $hookFile = Join-Path $env:USERPROFILE '.copilot\hooks\agentsemaphore.json'

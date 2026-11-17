@@ -15,6 +15,9 @@ pwsh -File install/windows/install.ps1 -FromRelease -Autostart
 pwsh -File install/windows/install.ps1 -FromRelease -Version v0.1.0-alpha.1 -Autostart
 ```
 
+With `-FromRelease` the console build `agentsemaphore-cli.exe` is installed too (from v0.1.0-alpha.3). Use it for
+commands in a terminal and for agent hooks (`agentsemaphore-cli hooks install copilot`, see
+[docs/AGENTS.md](../../docs/AGENTS.md)); `-CliExe <path>` installs a downloaded one.
 `-FromRelease` checks the download against the release's `SHA256SUMS.txt` and refuses it on a mismatch.
 `-Autostart` adds the same `HKCU\…\Run` entry the app's own "Start with the system" menu uses.
 

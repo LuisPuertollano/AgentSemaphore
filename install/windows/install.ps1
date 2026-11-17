@@ -33,6 +33,8 @@
 param(
   # Go build: path to a downloaded agentsemaphore(-windows-<arch>).exe.
   [string]$Exe,
+  # Go build: its console twin (agentsemaphore-cli-windows-<arch>.exe), for terminal commands and agent hooks.
+  [string]$CliExe,
   # Go build: download the newest GitHub release (pre-releases included) for this machine's architecture.
   [switch]$FromRelease,
   # With -FromRelease: this release tag instead of the newest, e.g. v0.1.0-alpha.1.
@@ -72,10 +74,23 @@ if ($mode -eq 'go') {
       $rel = Get-Release $Version
       Save-ReleaseAsset $rel $assetName $Exe
       Write-Host "Downloaded $assetName from $($rel.tag_name) (SHA-256 checked)."
+      $cliAsset = "agentsemaphore-cli-windows-$(Get-GoArch).exe"
+      $CliExe = Join-Path ([IO.Path]::GetTempPath()) $cliAsset
+      try {
+        Save-ReleaseAsset $rel $cliAsset $CliExe
+        Write-Host "Downloaded $cliAsset (SHA-256 checked)."
+      } catch {
+        $CliExe = ''
+        Write-Host "No console build installed ($($_.Exception.Message)). Releases before v0.1.0-alpha.3 have none; agent hooks need it."
+      }
     }
   }
   if (-not $WhatIfPreference -and -not (Test-Path -LiteralPath $Exe)) { throw "Not found: $Exe" }
   $Exe = [IO.Path]::GetFullPath($Exe)
+  if ($CliExe) {
+    if (-not $WhatIfPreference -and -not (Test-Path -LiteralPath $CliExe)) { throw "Not found: $CliExe" }
+    $CliExe = [IO.Path]::GetFullPath($CliExe)
+  }
   $payload = @()
 } else {
   $Source = [IO.Path]::GetFullPath($Source)
@@ -120,11 +135,13 @@ if ($mode -eq 'go') {
   Remove-PrototypeShortcuts $InstallDir -extra @($manifest.shortcut)
   $manifest.shortcut = $null
 } else {
-  $goExe = Join-Path $InstallDir $GoExeName
-  if (Test-Path -LiteralPath $goExe) {
-    if ($PSCmdlet.ShouldProcess($goExe, 'Remove Go build')) { Remove-Item -LiteralPath $goExe -Force }
+  foreach ($n in $GoExeName, $GoCliName) {
+    $goExe = Join-Path $InstallDir $n
+    if (Test-Path -LiteralPath $goExe) {
+      if ($PSCmdlet.ShouldProcess($goExe, 'Remove Go build')) { Remove-Item -LiteralPath $goExe -Force }
+    }
   }
-  $manifest.files = @($manifest.files | Where-Object { $_ -ne $GoExeName })
+  $manifest.files = @($manifest.files | Where-Object { $_ -ne $GoExeName -and $_ -ne $GoCliName })
   Remove-RunValue $InstallDir
   $manifest.runValue = $null
 }
@@ -136,7 +153,10 @@ if (-not (Test-Path -LiteralPath $InstallDir)) {
 }
 $copies = [ordered]@{}
 foreach ($f in $payload) { $copies[$f] = Join-Path $Source $f }
-if ($mode -eq 'go') { $copies[$GoExeName] = $Exe }
+if ($mode -eq 'go') {
+  $copies[$GoExeName] = $Exe
+  if ($CliExe) { $copies[$GoCliName] = $CliExe }
+}
 $copies['uninstall.ps1'] = Join-Path $PSScriptRoot 'uninstall.ps1'
 $copies['common.ps1'] = Join-Path $PSScriptRoot 'common.ps1'
 foreach ($name in $copies.Keys) {
@@ -229,4 +249,7 @@ if (-not $NoStart) {
 }
 if (-not $WhatIfPreference) {
   Write-Host "AgentSemaphore ($mode) installed in $InstallDir. To uninstall: pwsh -File `"$(Join-Path $InstallDir 'uninstall.ps1')`""
+  if ($mode -eq 'go' -and $CliExe) {
+    Write-Host "For Copilot / Codex CLI sessions: & `"$(Join-Path $InstallDir $GoCliName)`" hooks install copilot   (or codex; see docs/AGENTS.md)"
+  }
 }

@@ -43,6 +43,9 @@ jobs:
         include:
           - { target: windows-amd64, os: ubuntu-latest, goos: windows, goarch: amd64, cgo: '0', ext: .exe, ldflags: -H=windowsgui }
           - { target: windows-arm64, os: ubuntu-latest, goos: windows, goarch: arm64, cgo: '0', ext: .exe, ldflags: -H=windowsgui }
+          # Console twins: for terminal commands and agent hooks (PowerShell gives no stdin to a GUI program).
+          - { target: cli-windows-amd64, os: ubuntu-latest, goos: windows, goarch: amd64, cgo: '0', ext: .exe, ldflags: '' }
+          - { target: cli-windows-arm64, os: ubuntu-latest, goos: windows, goarch: arm64, cgo: '0', ext: .exe, ldflags: '' }
           - { target: linux-amd64,   os: ubuntu-latest, goos: linux,   goarch: amd64, cgo: '0', ext: '',   ldflags: '' }
           - { target: linux-arm64,   os: ubuntu-latest, goos: linux,   goarch: arm64, cgo: '0', ext: '',   ldflags: '' }
           - { target: darwin-arm64,  os: macos-latest,  goos: darwin,  goarch: arm64, cgo: '1', ext: '',   ldflags: '' }
@@ -135,5 +138,10 @@ jobs:
           $got = (Get-Content -LiteralPath $out -Raw).Trim()
           Write-Host "Installed: $got"
           if ($got -ne "agentsemaphore $env:VERSION") { throw "Expected agentsemaphore $env:VERSION, got '$got'" }
+          $cli = Join-Path $dir 'agentsemaphore-cli.exe'
+          if (-not (Test-Path $cli)) { throw 'console build agentsemaphore-cli.exe not installed' }
+          $cliGot = (& $cli -version).Trim()
+          Write-Host "Console build: $cliGot"
+          if ($cliGot -ne "agentsemaphore $env:VERSION") { throw "console build: expected agentsemaphore $env:VERSION, got '$cliGot'" }
           & (Join-Path $dir 'uninstall.ps1')
           if (Test-Path $dir) { throw 'uninstall left the folder' }

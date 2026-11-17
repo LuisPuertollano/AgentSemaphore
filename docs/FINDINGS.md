@@ -213,3 +213,17 @@ The Go core uses `procStart` only when the session's `pidDomain` equals its own:
 start time means the pid was reused by a newer process, and the old session file is ignored. On
 other systems (Windows and macOS also write both fields, format not checked) and for sessions from
 another machine or PID namespace, only the process-name check applies, as before.
+
+## Windows: a GUI program gets no stdin when piped from PowerShell (2026-11-17)
+
+Measured on the `windows-latest` CI runner (PowerShell 7). The same hook JSON was piped with
+`$json | & <exe> hook copilot agentStop`:
+
+- into the console build (`go build`), the session file was written;
+- into the GUI build (`go build -ldflags -H=windowsgui`, what the tray uses), nothing was written,
+  not even an entry in `hooks.log`.
+
+Copilot CLI runs a hook's `powershell` command this way, so on Windows the agent hooks must run a
+console program. Releases therefore also ship `agentsemaphore-cli-windows-<arch>.exe`. The installer
+puts it next to the tray as `agentsemaphore-cli.exe`, and `hooks install` points the hooks at it. It
+is also the one to use for commands in a terminal, because the GUI build prints nothing there.
