@@ -33,6 +33,11 @@ agentsemaphore hooks uninstall copilot  # removes only what install added
 
 The hooks call the program where it is installed. If you move it, run `hooks install` again.
 
+**Windows:** run these commands with the console build, `agentsemaphore-cli.exe`, which the installer
+puts next to `agentsemaphore.exe`. The hooks then use it too. The tray program is a GUI program, and
+PowerShell does not wait for it, so hook events would be handled late and could arrive out of order (see FINDINGS). Releases up to v0.1.0-alpha.2
+do not have the console build yet.
+
 ## What each event means
 
 | Agent | 🟠 working | 🔴 waiting for you | 🟢 idle | session removed |

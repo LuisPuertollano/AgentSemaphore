@@ -67,6 +67,9 @@ function Stop-Semaphore {
 
 # --- Go build -----------------------------------------------------------------
 $GoExeName = 'agentsemaphore.exe'
+# Console build of the same program, for commands in a terminal and for agent hooks:
+# PowerShell does not wait for a GUI program, so hook events would race (measured in CI, 2026-11-17).
+$GoCliName = 'agentsemaphore-cli.exe'
 $RunKey    = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $RunName   = 'AgentSemaphore'   # same name the app's own "Start with the system" menu uses
 $PrototypeFiles = @('semaforo.ps1', 'estado.ps1', 'avisos.py', 'avisos-textos.json', 'cambios.log', 'ajustes.json')
@@ -152,7 +155,8 @@ function Get-Release([string]$tag) {
   $base = "https://github.com/LuisPuertollano/AgentSemaphore/releases/download/$tag"
   [pscustomobject]@{
     tag_name = $tag
-    assets   = @('agentsemaphore-windows-amd64.exe', 'agentsemaphore-windows-arm64.exe', 'SHA256SUMS.txt') |
+    assets   = @('agentsemaphore-windows-amd64.exe', 'agentsemaphore-windows-arm64.exe',
+      'agentsemaphore-cli-windows-amd64.exe', 'agentsemaphore-cli-windows-arm64.exe', 'SHA256SUMS.txt') |
       ForEach-Object { [pscustomobject]@{ name = $_; browser_download_url = "$base/$_" } }
   }
 }

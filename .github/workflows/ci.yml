@@ -48,6 +48,9 @@ jobs:
         include:
           - { target: windows-amd64, os: ubuntu-latest, goos: windows, goarch: amd64, cgo: '0', ext: .exe, ldflags: -H=windowsgui }
           - { target: windows-arm64, os: ubuntu-latest, goos: windows, goarch: arm64, cgo: '0', ext: .exe, ldflags: -H=windowsgui }
+          # Console twins: for terminal commands and agent hooks (PowerShell does not wait for a GUI program, so hook events would race).
+          - { target: cli-windows-amd64, os: ubuntu-latest, goos: windows, goarch: amd64, cgo: '0', ext: .exe, ldflags: '' }
+          - { target: cli-windows-arm64, os: ubuntu-latest, goos: windows, goarch: arm64, cgo: '0', ext: .exe, ldflags: '' }
           - { target: linux-amd64,   os: ubuntu-latest, goos: linux,   goarch: amd64, cgo: '0', ext: '',   ldflags: '' }
           - { target: linux-arm64,   os: ubuntu-latest, goos: linux,   goarch: arm64, cgo: '0', ext: '',   ldflags: '' }
           - { target: darwin-arm64,  os: macos-latest,  goos: darwin,  goarch: arm64, cgo: '1', ext: '',   ldflags: '' }
@@ -89,8 +92,9 @@ jobs:
         run: |
           go build -o "$env:RUNNER_TEMP\agentsemaphore.exe" ./cmd/agentsemaphore
           go build -ldflags "-H=windowsgui" -o "$env:RUNNER_TEMP\agentsemaphore-gui.exe" ./cmd/agentsemaphore
-      - name: Fake sessions, all colours, single instance, screenshot
-        run: ./tools/e2e/windows-e2e.ps1 -Exe "$env:RUNNER_TEMP\agentsemaphore.exe" -TrayExe "$env:RUNNER_TEMP\agentsemaphore-gui.exe"
+          go build -o "$env:RUNNER_TEMP\fakeagent.exe" ./tools/e2e/fakeagent
+      - name: Fake sessions, all colours, agent hooks, single instance, screenshot
+        run: ./tools/e2e/windows-e2e.ps1 -Exe "$env:RUNNER_TEMP\agentsemaphore.exe" -TrayExe "$env:RUNNER_TEMP\agentsemaphore-gui.exe" -FakeAgent "$env:RUNNER_TEMP\fakeagent.exe"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -204,13 +208,16 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - name: Build the Go tray for the installer test
-        run: go build -ldflags "-H=windowsgui" -o "$env:RUNNER_TEMP\agentsemaphore-windows-amd64.exe" ./cmd/agentsemaphore
+      - name: Build the Go tray and its console twin for the installer test
+        run: |
+          go build -ldflags "-H=windowsgui" -o "$env:RUNNER_TEMP\agentsemaphore-windows-amd64.exe" ./cmd/agentsemaphore
+          go build -o "$env:RUNNER_TEMP\agentsemaphore-cli-windows-amd64.exe" ./cmd/agentsemaphore
       - name: Install, re-install, uninstall (prototype and Go build); finding releases
         env:
           GITHUB_TOKEN: ${{ github.token }}   # anonymous API calls are rate-limited per IP on shared runners
         run: |
           $env:AS_TEST_EXE = "$env:RUNNER_TEMP\agentsemaphore-windows-amd64.exe"
+          $env:AS_TEST_CLI = "$env:RUNNER_TEMP\agentsemaphore-cli-windows-amd64.exe"
           ./install/windows/test-installer.ps1
       - name: estado.ps1 on Windows
         run: ./prototype/windows/tests/test-estado.ps1

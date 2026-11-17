@@ -74,14 +74,21 @@ $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 Remove-ItemProperty -LiteralPath $runKey -Name AgentSemaphore -ErrorAction SilentlyContinue
 & $install -InstallDir $dir -Autostart -NoStart                       # prototype first
 Check (Test-Path $lnk) 'prototype installed with its shortcut'
-& $install -InstallDir $dir -Exe $env:AS_TEST_EXE -Autostart -NoStart  # then the Go build
+if (-not $env:AS_TEST_CLI) { throw 'AS_TEST_CLI (path to a console build) is required' }
+& $install -InstallDir $dir -Exe $env:AS_TEST_EXE -CliExe $env:AS_TEST_CLI -Autostart -NoStart  # then the Go build
 Check (Test-Path (Join-Path $dir 'agentsemaphore.exe')) 'Go build installed'
+Check (Test-Path (Join-Path $dir 'agentsemaphore-cli.exe')) 'console build installed next to it'
+$hookShow = & (Join-Path $dir 'agentsemaphore-cli.exe') hooks show copilot | Out-String
+Check ($hookShow -match [regex]::Escape((Join-Path $dir 'agentsemaphore-cli.exe').Replace('\', '\\'))) 'hooks point to the console build'
 Check (-not (Test-Path (Join-Path $dir 'semaforo.ps1'))) 'prototype files removed when switching'
 Check (-not (Test-Path $lnk)) 'prototype shortcut removed when switching'
 $run = (Get-ItemProperty -LiteralPath $runKey -Name AgentSemaphore -ErrorAction SilentlyContinue)?.AgentSemaphore
 Check ($run -eq ('"' + (Join-Path $dir 'agentsemaphore.exe') + '"')) 'HKCU Run entry points to the installed exe'
 $m = Get-Content (Join-Path $dir $ManifestName) -Raw | ConvertFrom-Json
 Check ($m.mode -eq 'go' -and $m.runValue) 'manifest records the Go mode and the Run entry'
+& $install -InstallDir $dir -Autostart -NoStart   # back to the prototype: both Go programs go
+Check (-not (Test-Path (Join-Path $dir 'agentsemaphore-cli.exe'))) 'switching to the prototype removes the console build too'
+& $install -InstallDir $dir -Exe $env:AS_TEST_EXE -Autostart -NoStart
 
 # Re-install while it runs: the running copy is stopped first, then replaced.
 $proc = Start-Process (Join-Path $dir 'agentsemaphore.exe') -PassThru
