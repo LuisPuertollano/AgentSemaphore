@@ -31,6 +31,10 @@ type Group struct {
 	Sessions []source.Session // worst state first
 }
 
+// hiddenWhenAbsent: sources that only matter once the user has set them up
+// (no menu group while there is nothing to read).
+var hiddenWhenAbsent = map[string]bool{"agentHooks": true}
+
 // notes per source shown next to its title (only red is detected from notifications).
 var titleNotes = map[string]string{"claudeDesktopToasts": "menu.toastsRedOnly"}
 
@@ -60,6 +64,9 @@ func Build(results []source.Result, lang string) View {
 	}
 	v := View{State: state.Worst(states...), Sessions: sessions, NotVisible: i18n.T(lang, "menu.notVisible")}
 	for _, r := range results {
+		if r.Health == source.Absent && hiddenWhenAbsent[r.Source] {
+			continue
+		}
 		g := Group{Title: i18n.T(lang, "source."+r.Source)}
 		if k, ok := titleNotes[r.Source]; ok {
 			g.Title += " (" + i18n.T(lang, k) + ")"

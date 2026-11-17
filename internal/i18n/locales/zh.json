@@ -17,6 +17,7 @@
   "reason.toast": "聊天/Cowork",
   "source.claudeCode": "Claude Code 会话",
   "source.claudeDesktopToasts": "Claude Desktop 通知",
+  "source.agentHooks": "其他智能体（Copilot、Codex、Gemini CLI）",
   "source.error": "{source}：无法读取（{detail}）",
   "menu.sourceNothing": "没有待处理的事",
   "menu.sourceAbsent": "此系统上未找到",

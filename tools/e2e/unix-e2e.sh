@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # End-to-end test of the Go core on Linux and macOS (CI runners). No Claude
 # installation is needed:
-#  - fake "claude" processes (tools/e2e/fakeclaude) and fake session files drive
+#  - fake "claude" processes (tools/e2e/fakeagent) and fake session files drive
 #    the Claude Code source through every colour (-once);
+#  - fake "copilot" and "codex" processes run our hook command as their agents
+#    would, so the hook source and its agent-process lookup are exercised;
 #  - the tray is started twice to check the single-instance lock;
 #  - Linux: on a private session bus, a minimal StatusNotifierWatcher
 #    (tools/e2e/snwatcher) reads back what a panel would show: the dot's
@@ -27,7 +29,8 @@ if [ "$MODE" = main ]; then
   rm -rf "$OUT"; mkdir -p "$OUT/home" "$OUT/tmp" "$OUT/fake"
   # Built before HOME moves, so Go uses the real module and build caches.
   ROOT=$(cd "$(dirname "$0")/../.." && pwd)
-  (cd "$ROOT" && go build -o "$OUT/fake/claude" ./tools/e2e/fakeclaude) || fail 'build the fake claude process'
+  (cd "$ROOT" && go build -o "$OUT/fake/claude" ./tools/e2e/fakeagent) || fail 'build the fake agent process'
+  cp "$OUT/fake/claude" "$OUT/fake/copilot"; cp "$OUT/fake/claude" "$OUT/fake/codex"
 fi
 export HOME="$OUT/home" TMPDIR="$OUT/tmp" E2E_OUT="$OUT"
 unset XDG_CONFIG_HOME
@@ -89,7 +92,7 @@ fi
 "$OUT/fake/claude" & P0=$!
 "$OUT/fake/claude" & P1=$!
 "$OUT/fake/claude" & P2=$!
-cleanup() { kill "$P0" "$P1" "$P2" 2>/dev/null || true; [ -n "${TRAY:-}" ] && kill "$TRAY" 2>/dev/null || true; }
+cleanup() { kill "$P0" "$P1" "$P2" 2>/dev/null || true; pkill -f "$OUT/fake/" 2>/dev/null || true; [ -n "${TRAY:-}" ] && kill "$TRAY" 2>/dev/null || true; }
 trap cleanup EXIT
 sleep 0.5
 for p in "$P0" "$P1" "$P2"; do kill -0 "$p" 2>/dev/null || fail "fake claude process $p is running"; done
@@ -117,6 +120,53 @@ write_session "$P1" e2e-busy dreaming
 kill "$P1"; wait "$P1" 2>/dev/null || true
 [ "$(state)" = green ] || fail 'session of an exited process is ignored -> green'
 ok 'session of an exited process is ignored -> green'
+
+# Linux: procStart (start time in /proc/<pid>/stat, field 22) catches a reused pid.
+if [ "$(uname -s)" = Linux ] && [ -r /etc/machine-id ]; then
+  dom="linux:$(cat /etc/machine-id):$(readlink /proc/self/ns/pid)"
+  ticks=$(sed 's/.*) //' "/proc/$P2/stat" | awk '{print $20}')
+  printf '{"pid": %s, "name": "e2e-same", "status": "busy", "procStart": "%s", "pidDomain": "%s"}\n' "$P2" "$ticks" "$dom" > "$SES/$P2.json"
+  [ "$(state)" = orange ] || { once; fail 'procStart matches the running process -> session shown'; }
+  ok 'procStart matches the running process -> session shown'
+  printf '{"pid": %s, "name": "e2e-reused", "status": "waiting", "procStart": "%s", "pidDomain": "%s"}\n' "$P2" "$((ticks + 1))" "$dom" > "$SES/$P2.json"
+  [ "$(state)" = green ] || { once; fail 'procStart of an older process -> reused pid, session ignored'; }
+  ok 'procStart of an older process -> reused pid, session ignored'
+  write_session "$P2" e2e-idle idle
+fi
+
+# --- other agents through their hooks ------------------------------------------------------
+hook() { # agent-binary agent event json: run our hook the way the agent would (via sh)
+  "$OUT/fake/$1" sh -c 'printf "%s" "$3" | "$0" hook "$1" "$2"' "$EXE" "$2" "$3" "$4" &
+}
+menu() { once | json '"\n".join(d["menu"])'; }
+hook copilot copilot notification '{"sessionId":"cp1","cwd":"/work/site","notification_type":"permission_prompt"}'; H1=$!
+hook codex codex UserPromptSubmit '{"session_id":"cx1","cwd":"/work/api"}'; H2=$!
+sleep 1
+[ "$(state)" = red ] || { once; fail 'Copilot permission prompt (hook) -> red'; }
+ok 'Copilot permission prompt (hook) -> red'
+menu | grep -q 'Copilot .* site.*permission prompt' || { once; fail 'menu shows the Copilot session and why'; }
+menu | grep -q 'Codex .* api' || { once; fail 'menu shows the Codex session'; }
+ok 'menu shows the Copilot and Codex sessions under "Other agents"'
+hook copilot copilot agentStop '{"sessionId":"cp1","cwd":"/work/site"}'; H3=$!
+sleep 1
+[ "$(state)" = orange ] || { once; fail 'Copilot turn done -> green, Codex still working -> orange'; }
+ok 'Copilot turn done -> green, Codex still working -> orange'
+kill "$H1" "$H3"; wait "$H1" "$H3" 2>/dev/null || true
+menu | grep -q 'Copilot .* site' && { once; fail 'a session whose agent process exited is dropped'; }
+ok 'a session whose agent process exited is dropped'
+hook codex codex SessionEnd '{"session_id":"cx1","cwd":"/work/api"}'; H4=$!
+sleep 1
+[ "$(state)" = green ] || { once; fail 'Codex session end -> session removed -> green'; }
+ok 'Codex session end -> session removed -> green'
+kill "$H2" "$H4" 2>/dev/null || true
+[ "$(printf '{"session_id":"g1"}' | "$EXE" hook gemini SessionStart)" = '{}' ] || fail 'Gemini hook prints {} (its documented no-op)'
+ok 'Gemini hook prints {} (its documented no-op)'
+[ "$(printf 'garbage' | "$EXE" hook codex Stop; echo "rc=$?")" = 'rc=0' ] || fail 'bad hook input: no output, exit 0'
+ok 'bad hook input: no output, exit 0 (never in the way of the agent)'
+"$EXE" hooks install copilot >/dev/null && [ -f "$HOME/.copilot/hooks/agentsemaphore.json" ] || fail 'hooks install copilot writes our own file'
+[ "$("$EXE" hooks status copilot)" = installed ] || fail 'hooks status copilot'
+"$EXE" hooks uninstall copilot >/dev/null && [ ! -e "$HOME/.copilot/hooks/agentsemaphore.json" ] || fail 'hooks uninstall copilot'
+ok 'hooks install / status / uninstall copilot'
 
 # --- tray: single instance --------------------------------------------------------------
 write_session "$P0" e2e-wait waiting 'permission prompt'

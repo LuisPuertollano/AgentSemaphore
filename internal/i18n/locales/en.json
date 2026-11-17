@@ -17,6 +17,7 @@
   "reason.toast": "chat/Cowork",
   "source.claudeCode": "Claude Code sessions",
   "source.claudeDesktopToasts": "Claude Desktop notifications",
+  "source.agentHooks": "Other agents (Copilot, Codex, Gemini CLI)",
   "source.error": "{source}: not readable ({detail})",
   "menu.sourceNothing": "nothing pending",
   "menu.sourceAbsent": "not found on this system",

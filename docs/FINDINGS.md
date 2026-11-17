@@ -199,3 +199,17 @@ still being exported. When it lands between building the property set and publis
 icon is never sent. The tray now re-sends the icon on every tick for the first ten seconds and
 then every 30 s, not only when the state changes. `tools/e2e/unix-e2e.sh` reads the icon back
 over D-Bus and catches this.
+
+## procStart and pidDomain on Linux (2026-11-17)
+
+Checked against a live Claude Code 2.1.326 session on Linux (x64):
+
+- `procStart` is a string holding the process start time exactly as `/proc/<pid>/stat` field 22
+  gives it (clock ticks since boot). Here: `"205"` = field 22 of that pid.
+- `pidDomain` is `linux:<machine-id>:pid:[<pid-namespace inode>]`, i.e. the content of
+  `/etc/machine-id` and the target of `/proc/self/ns/pid`.
+
+The Go core uses `procStart` only when the session's `pidDomain` equals its own: then a different
+start time means the pid was reused by a newer process, and the old session file is ignored. On
+other systems (Windows and macOS also write both fields, format not checked) and for sessions from
+another machine or PID namespace, only the process-name check applies, as before.

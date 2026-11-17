@@ -19,3 +19,15 @@ func name(pid int) (string, bool) {
 	}
 	return string(c), true
 }
+
+func startTicks(int) (uint64, bool) { return 0, false }
+
+func domain() string { return "" }
+
+func parent(pid int) (int, bool) {
+	kp, err := unix.SysctlKinfoProc("kern.proc.pid", pid)
+	if err != nil || kp == nil || kp.Proc.P_pid != int32(pid) {
+		return 0, false
+	}
+	return int(kp.Eproc.Ppid), true
+}

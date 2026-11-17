@@ -76,3 +76,16 @@ func TestGroupsSayWhatIsWatched(t *testing.T) {
 		t.Errorf("broken source group %+v", g)
 	}
 }
+
+func TestHooksGroupHiddenUntilInstalled(t *testing.T) {
+	absent := []source.Result{{Source: "claudeCode", Health: source.OK}, {Source: "agentHooks", Health: source.Absent}}
+	for _, g := range Build(absent, "en").Groups {
+		if strings.Contains(g.Title, "Other agents") {
+			t.Fatal("no hooks installed: no 'Other agents' group")
+		}
+	}
+	present := []source.Result{{Source: "agentHooks", Health: source.OK}}
+	if g := Build(present, "en").Groups; len(g) != 1 || !strings.Contains(g[0].Title, "Other agents") {
+		t.Fatalf("hooks installed: group expected, got %+v", g)
+	}
+}

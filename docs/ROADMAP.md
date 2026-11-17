@@ -19,9 +19,11 @@ This file keeps the overview; the issues hold the details and progress.
 - Order for Phase 1: settings, i18n and installer first, then the verifications and the grey state.
 
 ## Status (2026-11-17)
-- First pre-release: [v0.1.0-alpha.1](https://github.com/LuisPuertollano/AgentSemaphore/releases/tag/v0.1.0-alpha.1)
+- Pre-releases: [v0.1.0-alpha.1](https://github.com/LuisPuertollano/AgentSemaphore/releases/tag/v0.1.0-alpha.1) and
+  [v0.1.0-alpha.2](https://github.com/LuisPuertollano/AgentSemaphore/releases/tag/v0.1.0-alpha.2)
   (Windows x64/ARM64, Linux x64/ARM64, macOS Intel/Apple silicon), with install scripts for
-  Windows (`install/windows`) and Linux/macOS (`install/unix`).
+  Windows (`install/windows`) and Linux/macOS (`install/unix`). Every release is installed and
+  checked by CI right after publishing.
 - Real-machine testing so far: Windows 11 ARM64 only. Linux and macOS are tested in CI only
   (no maintainer machine), so reports from users of those systems are very welcome.
 
@@ -45,8 +47,10 @@ Done:
   notifications on Windows), worst-state aggregation, tray with tooltip and menu.
 - ✅ Windows: left click opens Claude, taskbar flash, autostart, single instance, installer
   (`-FromRelease` with SHA-256 check). End-to-end tests on Windows 11 ARM64 and x64 in CI.
-- ✅ Releases: six binaries + `SHA256SUMS.txt`, published from a tag or by hand; the release is
-  installed and checked on Windows right after publishing.
+- ✅ Releases: six binaries + `SHA256SUMS.txt`, published from a tag or by hand; each release is
+  installed and checked on Windows, Linux and macOS right after publishing.
+- ✅ PID reuse on Linux: `procStart` (verified format, see FINDINGS) tells a live session from an
+  old file whose pid now belongs to a newer process.
 - ✅ Linux and macOS end-to-end tests in CI (x64 and ARM64 Linux, Apple silicon macOS): fake
   sessions through every colour; on Linux the tray's dot, tooltip and menu are read back over
   D-Bus as a panel would see them.
@@ -60,9 +64,17 @@ Next:
   extension (Ubuntu enables it by default); other desktops are untested so far. In CI where
   possible, otherwise by user reports.
 
-## Phase 3 — More agents
-- Gemini CLI, OpenAI Codex CLI, GitHub Copilot CLI, others with hooks or state files.
-- One source module per agent; additive hook install/uninstall.
+## Phase 3 — More agents 🚧
+- ✅ One generic hook source (`internal/source/hooks`): the agent runs
+  `agentsemaphore hook <agent> <event>`; one file per session; the agent's process is recorded so a
+  crashed session disappears; a pure observer (no output, exit 0).
+- ✅ GitHub Copilot CLI and OpenAI Codex CLI: `agentsemaphore hooks install|uninstall|status`.
+  Copilot gets its own hook file; for Codex our entries are added next to the user's in `hooks.json`.
+  Gemini CLI: the snippet is printed, because its hooks live in the user's main `settings.json`.
+- ✅ Event meanings from the vendors' documentation, with sources and gaps in
+  [docs/AGENTS.md](AGENTS.md). Tested in CI with simulated hook calls under fake agent processes.
+- Next: reports from real Copilot, Codex and Gemini CLI users; Codex questions (`request_user_input`);
+  more agents.
 
 ## Phase 4 — Subscription usage (long term)
 - Optional panel with plan usage per provider, only from data the user's own tools already hold locally.
