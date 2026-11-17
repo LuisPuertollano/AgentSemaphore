@@ -39,8 +39,8 @@ getting spammed by notifications.
 `prototype/windows/` is a **working** Windows prototype (PowerShell + a small Python helper),
 installed and verified on Luis's laptop on 2026-11-14. The cross-platform Go core (`cmd/`, `internal/`)
 reads Claude Code sessions and Claude Desktop notifications; its tray ran on the Windows ARM64 laptop on
-2026-11-14 (dot, tooltip, menu and Quit fine; real notification DB read). Not yet tested on a Linux or macOS
-desktop. Read `docs/FINDINGS.md` before changing
+2026-11-14 (dot, tooltip, menu and Quit fine; real notification DB read). Linux (x64, ARM64) and macOS are tested end-to-end in CI only;
+Luis has no Linux or macOS machine, so never ask him to test there. Read `docs/FINDINGS.md` before changing
 any detection logic — it records what was measured and what is known to be broken upstream.
 
 ## Roadmap

@@ -87,8 +87,10 @@ behind the **^** arrow next to the clock, drag it onto the taskbar.
 
 ### Linux and macOS (in progress)
 
-The same Go core builds for Linux x64/ARM64 and macOS. It reads Claude Code sessions. Every CI run
-uploads the binaries as artifacts, and tagged versions are published as releases.
+The same Go core runs on Linux x64/ARM64 and macOS. It reads Claude Code sessions. Binaries are in the
+[releases](https://github.com/LuisPuertollano/AgentSemaphore/releases); an install script is next. Every pull
+request runs end-to-end tests on Linux x64, Linux ARM64 and macOS (Apple silicon), but nobody on the team uses
+these systems daily yet: if you do, a quick test report is very welcome.
 
 ```sh
 go run ./cmd/agentsemaphore          # tray app
@@ -98,7 +100,7 @@ go run ./cmd/agentsemaphore -once    # print the current state as JSON and exit
 ## Roadmap
 
 1. ✅ Harden the Windows prototype
-2. 🚧 Cross-platform core (Windows, Linux, macOS)
+2. 🚧 Cross-platform core: ✅ Windows · 🚧 Linux and macOS (builds and CI tests done, installer next)
 3. ⏳ More agents (Gemini CLI, Codex CLI, Copilot CLI, …)
 4. ⏳ Optional view of your subscription usage, from local data only
 5. ⏳ Public release with a landing page

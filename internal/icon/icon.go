@@ -22,6 +22,15 @@ var colours = map[state.State]color.NRGBA{
 
 const size = 32
 
+// Colour returns the fill colour of the dot for s (grey for unknown values).
+// Tests use it to tell which state a tray icon shows.
+func Colour(s state.State) color.NRGBA {
+	if c, ok := colours[s]; ok {
+		return c
+	}
+	return colours[state.Grey]
+}
+
 // PNG returns a 32×32 anti-aliased dot with a thin dark outline (the tray icon).
 func PNG(s state.State) []byte { return PNGSize(s, size) }
 

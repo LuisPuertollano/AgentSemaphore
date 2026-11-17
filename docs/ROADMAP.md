@@ -11,11 +11,18 @@ This file keeps the overview; the issues hold the details and progress.
 
 ## Decisions (2026-11-14)
 - Core stack: **Go + fyne.io/systray** (single binary, no runtime; Windows x64/arm64 without cgo;
-  Linux via DBus StatusNotifierItem; macOS built on `macos-latest`).
+  Linux via D-Bus StatusNotifierItem; macOS built on `macos-latest`). Chosen over Python + pystray
+  (runtime to install) and Rust + Tauri (heavier toolchain for a tray-only app).
 - State priority: **red > grey > orange > green**. Grey = a source could not be read; it must
   never be masked by orange or shown as green.
 - macOS: no paid notarization; unsigned build with a documented manual step.
 - Order for Phase 1: settings, i18n and installer first, then the verifications and the grey state.
+
+## Status (2026-11-17)
+- First pre-release: [v0.1.0-alpha.1](https://github.com/LuisPuertollano/AgentSemaphore/releases/tag/v0.1.0-alpha.1)
+  (Windows x64/ARM64, Linux x64/ARM64, macOS Intel/Apple silicon). Windows has an installer.
+- Real-machine testing so far: Windows 11 ARM64 only. Linux and macOS are tested in CI only
+  (no maintainer machine), so reports from users of those systems are very welcome.
 
 ## Phase 0 — Windows prototype ✅ (2026-11-14)
 - Tray dot red/orange/green, tooltip and menu with per-session state.
@@ -27,18 +34,28 @@ This file keeps the overview; the issues hold the details and progress.
 - Verify which Claude Code prompts set `status: waiting` (permission, AskUserQuestion, plan approval).
 - Verify toast texts in English and German UI.
 - "Unknown" (grey) state when a source fails or its format changes.
-- Settings in a small JSON file; English UI strings with Spanish/German translations
-  (Go packages `internal/config`, `internal/i18n`).
-- Installer/uninstaller script (`install/windows`), including the silent-notification tweak
-  as an explicit opt-in with backup/restore. Installs the prototype today, the Go build later.
-- Packaging decided: the core moves to Go (Phase 2); the PowerShell prototype stays as reference.
+- Settings in a small JSON file; UI in seven languages (en, es, de, fr, it, zh, hi).
+- Installer/uninstaller (`install/windows`), with the silent-notification tweak as an explicit
+  opt-in with backup/restore.
 
-## Phase 2 — Cross-platform core (Linux, macOS)
-- Candidate stacks: Python + pystray, Go + systray, Rust + Tauri. Pick for: no runtime install for
-  end users, ARM64 + x64 builds, small binary, easy CI on GitHub Actions.
-- Pluggable sources; the Claude Code session-file source is portable as-is.
-- macOS: menu-bar item; Linux: StatusNotifierItem/AppIndicator.
-- CI: build and smoke-test on `windows-latest`, `windows-11-arm`, `ubuntu-latest`, `macos-latest`.
+## Phase 2 — Cross-platform core (Go) 🚧
+Done:
+- ✅ Go core: pluggable sources (Claude Code session files on every OS; Claude Desktop
+  notifications on Windows), worst-state aggregation, tray with tooltip and menu.
+- ✅ Windows: left click opens Claude, taskbar flash, autostart, single instance, installer
+  (`-FromRelease` with SHA-256 check). End-to-end tests on Windows 11 ARM64 and x64 in CI.
+- ✅ Releases: six binaries + `SHA256SUMS.txt`, published from a tag or by hand; the release is
+  installed and checked on Windows right after publishing.
+- ✅ Linux and macOS end-to-end tests in CI (x64 and ARM64 Linux, Apple silicon macOS): fake
+  sessions through every colour; on Linux the tray's dot, tooltip and menu are read back over
+  D-Bus as a panel would see them.
+
+Next:
+- Linux and macOS install script: download the release, check SHA-256, autostart, clean uninstall.
+- macOS: what "open Claude" and a red alert should do there; no Dock icon.
+- Linux: check the tray on real desktops. GNOME shows tray icons only with the AppIndicator
+  extension (Ubuntu enables it by default); other desktops are untested so far. In CI where
+  possible, otherwise by user reports.
 
 ## Phase 3 — More agents
 - Gemini CLI, OpenAI Codex CLI, GitHub Copilot CLI, others with hooks or state files.
@@ -47,10 +64,12 @@ This file keeps the overview; the issues hold the details and progress.
 ## Phase 4 — Subscription usage (long term)
 - Optional panel with plan usage per provider, only from data the user's own tools already hold locally.
 
+## Phase 5 — Public release
+- ✅ Repo public, MIT, README with visuals, contributing guide, pre-release.
+- GitHub Pages landing page, real screenshots/GIFs, install instructions per OS.
+- Everything free; no telemetry.
+
 ## Ideas (not scheduled)
 - Cloud and Remote Control sessions from the user's own claude.ai session list (undocumented; opt-in).
 - Detect sessions that ended their turn with a plain-text question ("idle but needs you").
-
-## Phase 5 — Public release
-- Repo public, MIT, README + GitHub Pages landing page, screenshots/GIFs, install instructions per OS.
-- Everything free; no telemetry.
+- Claude Code sessions that Claude Desktop runs on SSH hosts.

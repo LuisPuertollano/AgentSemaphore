@@ -99,6 +99,43 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  e2e-unix:
+    name: ${{ matrix.name }} end-to-end
+    needs: go
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Linux x64,   os: ubuntu-latest }
+          - { name: Linux ARM64, os: ubuntu-24.04-arm }
+          - { name: macOS ARM64, os: macos-latest }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: dbus-run-session (Linux)
+        if: runner.os == 'Linux'
+        run: command -v dbus-run-session || { sudo apt-get update -q && sudo apt-get install -y -q dbus-bin; }
+      - name: Build
+        run: |
+          go build -o "$RUNNER_TEMP/bin/agentsemaphore" ./cmd/agentsemaphore
+          if [ "$RUNNER_OS" = Linux ]; then go build -o "$RUNNER_TEMP/bin/snwatcher" ./tools/e2e/snwatcher; fi
+      - name: Fake sessions, all colours, tray (read back over D-Bus on Linux), single instance
+        run: ./tools/e2e/unix-e2e.sh "$RUNNER_TEMP/bin/agentsemaphore" "$RUNNER_TEMP/bin/snwatcher"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/e2e/*.png
+            ${{ runner.temp }}/e2e/*.json
+            ${{ runner.temp }}/e2e/*.log
+            ${{ runner.temp }}/e2e/*.out
+          if-no-files-found: ignore
+          retention-days: 14
+
   # Windows on Arm runners are free only for public repositories.
   go-windows-arm:
     name: Go tests (windows-11-arm)
