@@ -154,6 +154,16 @@ jobs:
           go-version-file: go.mod
       - run: go test ./...
 
+  site:
+    name: Landing page (links)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Assemble like pages.yml and check every local link
+        run: |
+          mkdir -p _site && cp -r docs/site/. _site/ && cp -r docs/images _site/images
+          python3 tools/site/check_links.py _site
+
   prototype:
     name: Prototype logic (Python + PowerShell)
     runs-on: ubuntu-latest
