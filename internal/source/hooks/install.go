@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -92,8 +93,7 @@ func Snippet(agent, exe string) (string, error) {
 	default:
 		return "", fmt.Errorf("unknown agent %q (copilot, codex, gemini)", agent)
 	}
-	b, _ := json.MarshalIndent(v, "", "  ")
-	return string(b), nil
+	return string(marshal(v)), nil
 }
 
 // Install registers our hooks for agent and returns the file it wrote.
@@ -107,8 +107,7 @@ func Install(agent, exe, home string) (string, error) {
 	switch agent {
 	case "copilot":
 		path := CopilotFile(home)
-		b, _ := json.MarshalIndent(copilotConfig(exe), "", "  ")
-		return path, writeFile(path, append(b, '\n'))
+		return path, writeFile(path, marshal(copilotConfig(exe)))
 	case "codex":
 		path := CodexFile(home)
 		doc, err := readJSON(path)
@@ -125,8 +124,7 @@ func Install(agent, exe, home string) (string, error) {
 			list, _ := hooks[e].([]any)
 			hooks[e] = append(list, codexGroup(exe, e))
 		}
-		b, _ := json.MarshalIndent(doc, "", "  ")
-		return path, writeFile(path, append(b, '\n'))
+		return path, writeFile(path, marshal(doc))
 	case "gemini":
 		return "", errors.New("Gemini CLI keeps hooks in your main settings.json, which is not edited automatically: run 'agentsemaphore hooks show gemini' and add the \"hooks\" part by hand")
 	}
@@ -155,8 +153,7 @@ func Uninstall(agent, home string) (string, bool, error) {
 		if !removeOurs(doc, "codex") {
 			return path, false, nil
 		}
-		b, _ := json.MarshalIndent(doc, "", "  ")
-		return path, true, writeFile(path, append(b, '\n'))
+		return path, true, writeFile(path, marshal(doc))
 	}
 	return "", false, fmt.Errorf("unknown agent %q (copilot, codex)", agent)
 }
@@ -237,6 +234,17 @@ func removeOurs(doc map[string]any, agent string) bool {
 		}
 	}
 	return removed
+}
+
+// marshal is indented JSON without HTML escaping, so "&" stays readable in
+// the PowerShell command.
+func marshal(v any) []byte {
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(v)
+	return b.Bytes()
 }
 
 func writeFile(path string, data []byte) error {

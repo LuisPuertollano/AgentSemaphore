@@ -11,6 +11,7 @@
 param(
   [Parameter(Mandatory)][string]$Exe,          # console build: used for -once
   [string]$TrayExe = $Exe,                       # GUI build (no console window) for the tray checks
+  [string]$FakeAgent,                            # tools/e2e/fakeagent build: runs a hook as an agent would
   [string]$OutDir = (Join-Path $env:RUNNER_TEMP 'e2e')
 )
 Set-StrictMode -Version Latest
@@ -61,6 +62,59 @@ try {
   Stop-Process -Id $procs[1].Id -Force
   Start-Sleep -Milliseconds 500
   Check ((Once).state -eq 'green') 'session of an exited process is ignored -> green'
+
+  # --- other agents through their hooks ----------------------------------------------
+  # Copilot runs a hook's "powershell" command through PowerShell, so the chain is
+  # agent -> pwsh -> agentsemaphore. The GUI build is used: that is what users install.
+  if ($FakeAgent) {
+    $copilot = Join-Path $fakeDir 'copilot.exe'; Copy-Item $FakeAgent $copilot
+    $codex = Join-Path $fakeDir 'codex.exe'; Copy-Item $FakeAgent $codex
+    $pwshExe = (Get-Process -Id $PID).Path
+    $hookProcs = [System.Collections.Generic.List[object]]::new()
+    function Start-Hook([string]$agentExe, [string]$agent, [string]$event, [string]$json) {
+      $cmd = "'$json' | & '$TrayExe' hook $agent $event"
+      $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))
+      $p = Start-Process $agentExe -ArgumentList @($pwshExe, '-NoProfile', '-EncodedCommand', $b64) -WindowStyle Hidden -PassThru
+      $hookProcs.Add($p)
+      $p
+    }
+    function Menu { (Once).menu -join "`n" }
+
+    $h1 = Start-Hook $copilot 'copilot' 'notification' '{"sessionId":"cp1","cwd":"C:\\work\\site","notification_type":"permission_prompt"}'
+    $h2 = Start-Hook $codex 'codex' 'UserPromptSubmit' '{"session_id":"cx1","cwd":"C:\\work\\api"}'
+    Start-Sleep -Seconds 4
+    $s = Once
+    if ($s.state -ne 'red') { $s | ConvertTo-Json -Depth 5 | Write-Host }
+    Check ($s.state -eq 'red') 'Copilot permission prompt (hook via PowerShell) -> red'
+    Check ((Menu) -match 'Copilot . site.*permission prompt') 'menu shows the Copilot session and why'
+    Check ((Menu) -match 'Codex . api') 'menu shows the Codex session'
+
+    $h3 = Start-Hook $copilot 'copilot' 'agentStop' '{"sessionId":"cp1","cwd":"C:\\work\\site"}'
+    Start-Sleep -Seconds 4
+    Check ((Once).state -eq 'orange') 'Copilot turn done -> green, Codex still working -> orange'
+
+    Stop-Process -Id $h1.Id, $h3.Id -Force
+    Start-Sleep -Milliseconds 800
+    Check (-not ((Menu) -match 'Copilot . site')) 'a session whose agent process exited is dropped'
+
+    $null = Start-Hook $codex 'codex' 'SessionEnd' '{"session_id":"cx1","cwd":"C:\\work\\api"}'
+    Start-Sleep -Seconds 4
+    Check ((Once).state -eq 'green') 'Codex session end -> session removed -> green'
+
+    $out = '{"session_id":"g1"}' | & $TrayExe hook gemini SessionStart
+    Check ("$out".Trim() -eq '{}') "Gemini hook prints {} from the GUI build (got '$out')"
+    $null = 'garbage' | & $TrayExe hook codex Stop
+    Check ($LASTEXITCODE -eq 0) 'bad hook input: exit 0'
+
+    $hookFile = Join-Path $env:USERPROFILE '.copilot\hooks\agentsemaphore.json'
+    & $Exe hooks install copilot | Out-Null
+    Check (Test-Path $hookFile) 'hooks install copilot writes our own file'
+    $ps = ((Get-Content $hookFile -Raw | ConvertFrom-Json).hooks.notification)[0].powershell
+    Check ($ps -like "& `"$TrayExe`" hook copilot notification" -or $ps -like '& "*" hook copilot notification') "the Copilot hook has a PowerShell command ($ps)"
+    & $Exe hooks uninstall copilot | Out-Null
+    Check (-not (Test-Path $hookFile)) 'hooks uninstall copilot removes it'
+    $hookProcs | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
+  }
 
   # --- tray: single instance and screenshot -----------------------------------------
   $log = Join-Path $env:APPDATA 'AgentSemaphore\agentsemaphore.log'
