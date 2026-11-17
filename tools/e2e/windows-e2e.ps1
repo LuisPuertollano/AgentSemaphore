@@ -66,7 +66,7 @@ try {
   # --- other agents through their hooks ----------------------------------------------
   # Copilot runs a hook's "powershell" command through PowerShell, so the chain is
   # agent -> pwsh -> agentsemaphore. Hooks run the console build (agentsemaphore-cli.exe):
-  # piped from PowerShell, the GUI build gets no stdin (measured here, see docs/FINDINGS.md).
+  # from PowerShell, hook input to the GUI build got lost (measured here, see docs/FINDINGS.md).
   if ($FakeAgent) {
     $copilot = Join-Path $fakeDir 'copilot.exe'; Copy-Item $FakeAgent $copilot
     $codex = Join-Path $fakeDir 'codex.exe'; Copy-Item $FakeAgent $codex

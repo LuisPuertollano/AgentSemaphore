@@ -43,7 +43,7 @@ jobs:
         include:
           - { target: windows-amd64, os: ubuntu-latest, goos: windows, goarch: amd64, cgo: '0', ext: .exe, ldflags: -H=windowsgui }
           - { target: windows-arm64, os: ubuntu-latest, goos: windows, goarch: arm64, cgo: '0', ext: .exe, ldflags: -H=windowsgui }
-          # Console twins: for terminal commands and agent hooks (PowerShell gives no stdin to a GUI program).
+          # Console twins: for terminal commands and agent hooks (PowerShell does not wait for a GUI program; hook input got lost).
           - { target: cli-windows-amd64, os: ubuntu-latest, goos: windows, goarch: amd64, cgo: '0', ext: .exe, ldflags: '' }
           - { target: cli-windows-arm64, os: ubuntu-latest, goos: windows, goarch: arm64, cgo: '0', ext: .exe, ldflags: '' }
           - { target: linux-amd64,   os: ubuntu-latest, goos: linux,   goarch: amd64, cgo: '0', ext: '',   ldflags: '' }

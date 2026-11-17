@@ -214,14 +214,16 @@ start time means the pid was reused by a newer process, and the old session file
 other systems (Windows and macOS also write both fields, format not checked) and for sessions from
 another machine or PID namespace, only the process-name check applies, as before.
 
-## Windows: a GUI program gets no stdin when piped from PowerShell (2026-11-17)
+## Windows: hooks cannot rely on the GUI build under PowerShell (2026-11-17)
 
-Measured on the `windows-latest` CI runner (PowerShell 7). The same hook JSON was piped with
+Measured on the CI runners (PowerShell 7). The same hook JSON was piped with
 `$json | & <exe> hook copilot agentStop`:
 
-- into the console build (`go build`), the session file was written;
-- into the GUI build (`go build -ldflags -H=windowsgui`, what the tray uses), nothing was written,
-  not even an entry in `hooks.log`.
+- into the console build (`go build`): the session file was written before the command returned;
+- into the GUI build (`go build -ldflags -H=windowsgui`, what the tray uses): PowerShell does not wait for
+  a GUI program. On `windows-latest` nothing had been written 0.5 s later, not even a `hooks.log`
+  line. On `windows-11-arm` the file showed up a few seconds later. When the GUI build was run as a
+  hook (fake agent → `pwsh -Command` → GUI build), no session arrived within 4 s on either runner.
 
 Copilot CLI runs a hook's `powershell` command this way, so on Windows the agent hooks must run a
 console program. Releases therefore also ship `agentsemaphore-cli-windows-<arch>.exe`. The installer

@@ -125,8 +125,8 @@ func runHooks(args []string) int {
 }
 
 // hookExe picks the program the agents' hooks should run. On Windows the
-// installed agentsemaphore.exe is a GUI program, and PowerShell does not hand
-// stdin to a GUI program (measured in CI, see docs/FINDINGS.md), so hooks use
+// installed agentsemaphore.exe is a GUI program, which PowerShell does not wait
+// for and whose hook input got lost in CI (see docs/FINDINGS.md), so hooks use
 // its console twin agentsemaphore-cli.exe when it sits next to it.
 func hookExe(exe string) string {
 	if runtime.GOOS != "windows" {

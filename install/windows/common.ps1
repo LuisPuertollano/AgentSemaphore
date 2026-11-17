@@ -68,7 +68,7 @@ function Stop-Semaphore {
 # --- Go build -----------------------------------------------------------------
 $GoExeName = 'agentsemaphore.exe'
 # Console build of the same program, for commands in a terminal and for agent hooks:
-# PowerShell does not hand stdin to a GUI-subsystem program (measured in CI, 2026-11-17).
+# PowerShell does not wait for a GUI program and its hook input got lost (measured in CI, 2026-11-17).
 $GoCliName = 'agentsemaphore-cli.exe'
 $RunKey    = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $RunName   = 'AgentSemaphore'   # same name the app's own "Start with the system" menu uses
