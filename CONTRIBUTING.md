@@ -31,3 +31,10 @@ go run ./cmd/agentsemaphore -once                # print the current state as JS
 ```
 
 CI runs all of this on Linux, Windows and macOS for every pull request.
+
+## Releases
+
+Maintainers only. Either push a tag `vX.Y.Z` (or `vX.Y.Z-alpha.N` for a pre-release), or run the
+**Release** workflow by hand on `main` (Actions → Release → Run workflow) with the version to create.
+The workflow builds the six binaries, publishes them with `SHA256SUMS.txt`, then installs the new
+release on Windows x64 and ARM64 with `install.ps1 -FromRelease` and checks the version it reports.

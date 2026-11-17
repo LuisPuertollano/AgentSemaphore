@@ -1,17 +1,41 @@
 name: Release
 
-# Runs only when a version tag (v*) is pushed. Builds every binary and
-# publishes them as a GitHub release (marked pre-release while the version
-# has a suffix such as -alpha.1).
+# Builds every binary and publishes them as a GitHub release (marked
+# pre-release while the version has a suffix such as -alpha.1). Starts when
+# a version tag (v*) is pushed, or by hand from the Actions tab ("Run
+# workflow" on main, with the version to create; the tag is made on the
+# commit being built). Afterwards the installer downloads that release on
+# Windows x64 and ARM64 and checks it.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to create, e.g. v0.1.0-alpha.1'
+        required: true
 
 permissions:
   contents: write
 
+env:
+  VERSION: ${{ inputs.version || github.ref_name }}
+
 jobs:
+  check:
+    name: Check the version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Version format and branch
+        run: |
+          echo "Version: $VERSION"
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "::error::Not a version tag: $VERSION"; exit 1; }
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] && [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error::Run it on main, not $GITHUB_REF"; exit 1
+          fi
+
   build:
+    needs: check
     name: Build ${{ matrix.target }}
     strategy:
       fail-fast: true
@@ -34,7 +58,7 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: ${{ matrix.cgo }}
-        run: go build -trimpath -ldflags "-s -w ${{ matrix.ldflags }} -X main.version=${GITHUB_REF_NAME}" -o "dist/agentsemaphore-${{ matrix.target }}${{ matrix.ext }}" ./cmd/agentsemaphore
+        run: go build -trimpath -ldflags "-s -w ${{ matrix.ldflags }} -X main.version=${VERSION}" -o "dist/agentsemaphore-${{ matrix.target }}${{ matrix.ext }}" ./cmd/agentsemaphore
       - uses: actions/upload-artifact@v7
         with:
           name: bin-${{ matrix.target }}
@@ -57,6 +81,33 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           pre=""
-          case "$GITHUB_REF_NAME" in *-*) pre="--prerelease";; esac
-          gh release create "$GITHUB_REF_NAME" dist/* $pre --generate-notes \
-            --title "AgentSemaphore $GITHUB_REF_NAME"
+          case "$VERSION" in *-*) pre="--prerelease";; esac
+          # --target only matters when the tag does not exist yet (manual run).
+          gh release create "$VERSION" dist/* $pre --generate-notes \
+            --target "$GITHUB_SHA" --title "AgentSemaphore $VERSION"
+
+  verify:
+    name: Install the release (${{ matrix.os }})
+    needs: publish
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, windows-11-arm]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: install.ps1 -FromRelease, then uninstall
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'AgentSemaphore-release'
+          ./install/windows/install.ps1 -FromRelease -Version $env:VERSION -InstallDir $dir -NoStart
+          ./install/windows/install.ps1 -FromRelease -InstallDir $dir -NoStart   # newest: should be the same one
+          $exe = Join-Path $dir 'agentsemaphore.exe'
+          $out = Join-Path $env:RUNNER_TEMP 'version.txt'
+          Start-Process -FilePath $exe -ArgumentList '-version' -RedirectStandardOutput $out -Wait -NoNewWindow
+          $got = (Get-Content -LiteralPath $out -Raw).Trim()
+          Write-Host "Installed: $got"
+          if ($got -ne "agentsemaphore $env:VERSION") { throw "Expected agentsemaphore $env:VERSION, got '$got'" }
+          & (Join-Path $dir 'uninstall.ps1')
+          if (Test-Path $dir) { throw 'uninstall left the folder' }
