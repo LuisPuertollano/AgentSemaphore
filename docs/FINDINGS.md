@@ -222,10 +222,12 @@ Measured on the CI runners (PowerShell 7). The same hook JSON was piped with
 - into the console build (`go build`): the session file was written before the command returned;
 - into the GUI build (`go build -ldflags -H=windowsgui`, what the tray uses): PowerShell does not wait for
   a GUI program. On `windows-latest` nothing had been written 0.5 s later, not even a `hooks.log`
-  line. On `windows-11-arm` the file showed up a few seconds later. When the GUI build was run as a
-  hook (fake agent → `pwsh -Command` → GUI build), no session arrived within 4 s on either runner.
+  line. On `windows-11-arm` the file showed up a few seconds later.
 
-Copilot CLI runs a hook's `powershell` command this way, so on Windows the agent hooks must run a
-console program. Releases therefore also ship `agentsemaphore-cli-windows-<arch>.exe`. The installer
-puts it next to the tray as `agentsemaphore-cli.exe`, and `hooks install` points the hooks at it. It
+A program that PowerShell does not wait for would turn hook events into a race: an "agent stop" can
+be processed before the "permission prompt" that came first. The console build runs synchronously
+and keeps the events in order. On Windows, Copilot CLI hooks are given as a `powershell` command.
+
+So on Windows the agent hooks run a console program. Releases therefore also ship
+`agentsemaphore-cli-windows-<arch>.exe`. The installer puts it next to the tray as `agentsemaphore-cli.exe`, and `hooks install` points the hooks at it. It
 is also the one to use for commands in a terminal, because the GUI build prints nothing there.

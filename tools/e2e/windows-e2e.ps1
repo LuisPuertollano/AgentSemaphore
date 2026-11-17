@@ -66,7 +66,7 @@ try {
   # --- other agents through their hooks ----------------------------------------------
   # Copilot runs a hook's "powershell" command through PowerShell, so the chain is
   # agent -> pwsh -> agentsemaphore. Hooks run the console build (agentsemaphore-cli.exe):
-  # from PowerShell, hook input to the GUI build got lost (measured here, see docs/FINDINGS.md).
+  # PowerShell does not wait for the GUI build (measured here, see docs/FINDINGS.md).
   if ($FakeAgent) {
     $copilot = Join-Path $fakeDir 'copilot.exe'; Copy-Item $FakeAgent $copilot
     $codex = Join-Path $fakeDir 'codex.exe'; Copy-Item $FakeAgent $codex
@@ -75,7 +75,9 @@ try {
     function Start-Hook([string]$agentExe, [string]$agent, [string]$event, [string]$json) {
       $cmd = "'$json' | & '$Exe' hook $agent $event"
       $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))
-      $p = Start-Process $agentExe -ArgumentList @($pwshExe, '-NoProfile', '-EncodedCommand', $b64) -WindowStyle Hidden -PassThru
+      # Start-Process joins -ArgumentList with spaces and does not quote: quote the pwsh path
+      # ("C:\Program Files\...") or the fake agent gets it split in two.
+      $p = Start-Process $agentExe -ArgumentList @("`"$pwshExe`"", '-NoProfile', '-EncodedCommand', $b64) -WindowStyle Hidden -PassThru
       $hookProcs.Add($p)
       $p
     }
