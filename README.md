@@ -81,7 +81,7 @@ pwsh -File install/windows/install.ps1 -FromRelease -Autostart -WhatIf   # see e
 pwsh -File install/windows/install.ps1 -FromRelease -Autostart
 ```
 
-This downloads the latest release for your machine: one small executable, nothing else to install. Details,
+This downloads the newest release for your machine (pre-releases included) and checks its SHA-256: one small executable, nothing else to install. Details,
 the PowerShell prototype and the uninstaller: [install/windows](install/windows/README.md). If the dot hides
 behind the **^** arrow next to the clock, drag it onto the taskbar.
 

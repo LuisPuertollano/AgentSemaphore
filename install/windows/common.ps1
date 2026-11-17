@@ -121,3 +121,42 @@ function Get-GoArch {
     'Arm64' { 'arm64' } 'X64' { 'amd64' } default { throw "Unsupported architecture: $_" }
   }
 }
+
+# --- GitHub releases -------------------------------------------------------------
+$ReleasesApi = 'https://api.github.com/repos/LuisPuertollano/AgentSemaphore/releases'
+
+# The release with tag $tag, or the newest published one. Pre-releases count:
+# GitHub's own "latest" link skips them, and early versions are all pre-releases.
+function Get-Release([string]$tag) {
+  $headers = @{ Accept = 'application/vnd.github+json'; 'User-Agent' = 'AgentSemaphore-installer' }
+  if ($tag) { return Invoke-RestMethod -Uri "$ReleasesApi/tags/$tag" -Headers $headers }
+  $all = Invoke-RestMethod -Uri "$ReleasesApi`?per_page=20" -Headers $headers
+  $rel = $all | Where-Object { -not $_.draft } | Sort-Object { [datetime]$_.published_at } -Descending | Select-Object -First 1
+  if (-not $rel) { throw 'No published release found.' }
+  $rel
+}
+
+# Downloads asset $name of release $rel to $dest and checks it against the
+# release's SHA256SUMS.txt; deletes the download and throws on a mismatch.
+function Save-ReleaseAsset($rel, [string]$name, [string]$dest) {
+  $asset = @($rel.assets | Where-Object { $_.name -eq $name })
+  if (-not $asset) { throw "Release $($rel.tag_name) has no $name." }
+  $sums = @($rel.assets | Where-Object { $_.name -eq 'SHA256SUMS.txt' })
+  if (-not $sums) { throw "Release $($rel.tag_name) has no SHA256SUMS.txt; not installing an unchecked download." }
+  # Saved to a file first: release assets come as application/octet-stream,
+  # so Invoke-WebRequest's .Content would be bytes, not text.
+  $sumsFile = "$dest.sha256sums"
+  Invoke-WebRequest -Uri $sums[0].browser_download_url -OutFile $sumsFile -UseBasicParsing
+  $line = @(Get-Content -LiteralPath $sumsFile) |
+    Where-Object { $_ -match "^([0-9a-fA-F]{64})\s+\*?$([regex]::Escape($name))\s*$" } | Select-Object -First 1
+  Remove-Item -LiteralPath $sumsFile -Force
+  if (-not $line) { throw "SHA256SUMS.txt of $($rel.tag_name) does not list $name." }
+  $want = ($line -split '\s+')[0].ToLowerInvariant()
+  Invoke-WebRequest -Uri $asset[0].browser_download_url -OutFile $dest -UseBasicParsing
+  $got = (Get-FileHash -LiteralPath $dest -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ($got -ne $want) {
+    Remove-Item -LiteralPath $dest -Force
+    throw "SHA-256 mismatch for $name (expected $want, got $got); download deleted."
+  }
+  Unblock-File -LiteralPath $dest
+}

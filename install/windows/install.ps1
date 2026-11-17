@@ -6,7 +6,9 @@
 .DESCRIPTION
   Two payloads, same folder (%LOCALAPPDATA%\AgentSemaphore):
   - the Go build (recommended): -Exe <path to agentsemaphore.exe>, or
-    -FromRelease to download the latest release for this machine (x64/ARM64);
+    -FromRelease to download the newest release for this machine (x64/ARM64;
+    pre-releases included while there is no stable one), checked against
+    the release's SHA256SUMS.txt;
   - the PowerShell prototype (default when neither is given).
   Installing one removes what the other left in that folder, so switching is clean.
 
@@ -23,14 +25,18 @@
 .EXAMPLE
   ./install.ps1 -FromRelease -Autostart -WhatIf
 .EXAMPLE
+  ./install.ps1 -FromRelease -Version v0.1.0-alpha.1 -Autostart
+.EXAMPLE
   ./install.ps1 -Autostart                      # the PowerShell prototype
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
   # Go build: path to a downloaded agentsemaphore(-windows-<arch>).exe.
   [string]$Exe,
-  # Go build: download the latest GitHub release for this machine's architecture.
+  # Go build: download the newest GitHub release (pre-releases included) for this machine's architecture.
   [switch]$FromRelease,
+  # With -FromRelease: this release tag instead of the newest, e.g. v0.1.0-alpha.1.
+  [string]$Version,
   # Prototype: folder with its files (default: the prototype in this repo).
   [string]$Source = (Join-Path $PSScriptRoot '..\..\prototype\windows'),
   [string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'AgentSemaphore'),
@@ -51,18 +57,21 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'common.ps1')
 
+if ($Version -and -not $FromRelease) { throw '-Version only works together with -FromRelease.' }
+if ($Version -and $Version -notmatch '^v\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$') { throw "Not a release tag: $Version (expected e.g. v0.1.0-alpha.1)" }
 $mode = if ($Exe -or $FromRelease) { 'go' } else { 'prototype' }
 $InstallDir = [IO.Path]::GetFullPath($InstallDir)
 
 # --- What to install -------------------------------------------------------------
 if ($mode -eq 'go') {
   if ($FromRelease) {
-    $arch = Get-GoArch
-    $url = "https://github.com/LuisPuertollano/AgentSemaphore/releases/latest/download/agentsemaphore-windows-$arch.exe"
-    $Exe = Join-Path ([IO.Path]::GetTempPath()) "agentsemaphore-windows-$arch.exe"
-    if ($PSCmdlet.ShouldProcess($url, 'Download')) {
-      Invoke-WebRequest -Uri $url -OutFile $Exe -UseBasicParsing
-      Unblock-File -LiteralPath $Exe
+    $assetName = "agentsemaphore-windows-$(Get-GoArch).exe"
+    $Exe = Join-Path ([IO.Path]::GetTempPath()) $assetName
+    $what = if ($Version) { "release $Version" } else { 'the newest release' }
+    if ($PSCmdlet.ShouldProcess("$assetName from $what", 'Download and check SHA-256')) {
+      $rel = Get-Release $Version
+      Save-ReleaseAsset $rel $assetName $Exe
+      Write-Host "Downloaded $assetName from $($rel.tag_name) (SHA-256 checked)."
     }
   }
   if (-not $WhatIfPreference -and -not (Test-Path -LiteralPath $Exe)) { throw "Not found: $Exe" }
