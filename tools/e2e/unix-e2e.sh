@@ -127,6 +127,9 @@ case "$(uname -s)" in
     sleep 4
     kill -0 "$TRAY" 2>/dev/null || { cat "$OUT/tray.out"; fail 'tray app keeps running'; }
     ok 'tray app keeps running'
+    # Informational: does the bare binary get a Dock icon? ("Foreground" = yes, "UIElement" = no)
+    lsappinfo list > "$OUT/lsappinfo.txt" 2>&1 || true
+    grep -i -A12 'agentsemaphore' "$OUT/lsappinfo.txt" | grep -i -E 'agentsemaphore|type' | head -5 || echo 'note: not listed by lsappinfo'
     screencapture -x "$OUT/desktop.png" 2>/dev/null && ok 'screenshot saved (for review, not an assertion)' || echo 'note: no screenshot'
     ;;
 esac

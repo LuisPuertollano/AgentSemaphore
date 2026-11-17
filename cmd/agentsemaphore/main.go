@@ -4,6 +4,8 @@
 //	agentsemaphore            run the tray app
 //	agentsemaphore -once      read every source once, print the result as JSON and exit
 //	agentsemaphore -version   print the version and exit
+//	agentsemaphore -autostart on|off
+//	                          start this executable at sign-in, or remove that entry, and exit
 package main
 
 import (
@@ -18,6 +20,7 @@ import (
 	"unicode/utf16"
 
 	"github.com/LuisPuertollano/AgentSemaphore/internal/aggregate"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/autostart"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/config"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/i18n"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/single"
@@ -32,10 +35,14 @@ var version = "dev"
 func main() {
 	once := flag.Bool("once", false, "read all sources once, print JSON and exit")
 	showVersion := flag.Bool("version", false, "print the version and exit")
+	autostartFlag := flag.String("autostart", "", `"on": start this executable at sign-in; "off": remove that entry; then exit`)
 	flag.Parse()
 	if *showVersion {
 		fmt.Println("agentsemaphore", version)
 		return
+	}
+	if *autostartFlag != "" {
+		os.Exit(setAutostart(*autostartFlag))
 	}
 
 	settingsPath, err := config.DefaultPath()
@@ -166,4 +173,25 @@ func openLog(dir string) *log.Logger {
 		}
 	}
 	return log.New(os.Stderr, "", log.LstdFlags)
+}
+
+// setAutostart is what installers call, so the entry they create is exactly
+// the one the tray menu's "Start with the system" shows and removes.
+func setAutostart(v string) int {
+	var err error
+	switch v {
+	case "on":
+		err = autostart.Enable("")
+	case "off":
+		err = autostart.Disable()
+	default:
+		fmt.Fprintf(os.Stderr, "-autostart: want on or off, got %q\n", v)
+		return 2
+	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "autostart:", err)
+		return 1
+	}
+	fmt.Println("autostart", v)
+	return 0
 }
