@@ -9,7 +9,8 @@
 #  - Linux: on a private session bus, a minimal StatusNotifierWatcher
 #    (tools/e2e/snwatcher) reads back what a panel would show: the dot's
 #    colour, the tooltip and the menu;
-#  - macOS: a screenshot of the menu bar is saved for review (not an assertion).
+#  - macOS: the app must not get a Dock icon (lsappinfo); a screenshot of the
+#    menu bar is saved for review (not an assertion).
 # HOME, the config dir and TMPDIR point into a scratch folder, so nothing of
 # the real user's ~/.claude is read or written.
 #
@@ -201,9 +202,16 @@ case "$(uname -s)" in
     sleep 4
     kill -0 "$TRAY" 2>/dev/null || { cat "$OUT/tray.out"; fail 'tray app keeps running'; }
     ok 'tray app keeps running'
-    # Informational: does the bare binary get a Dock icon? ("Foreground" = yes, "UIElement" = no)
+    # No Dock icon: LaunchServices must not list it as a "Foreground" application
+    # (measured 2026-11-18: the bare binary is "BackgroundOnly").
     lsappinfo list > "$OUT/lsappinfo.txt" 2>&1 || true
-    grep -i -A12 'agentsemaphore' "$OUT/lsappinfo.txt" | grep -i -E 'agentsemaphore|type' | head -5 || echo 'note: not listed by lsappinfo'
+    apptype=$(grep -i -A12 'agentsemaphore' "$OUT/lsappinfo.txt" | grep -o -E 'type="[A-Za-z]+"' | head -1 || true)
+    echo "lsappinfo: ${apptype:-not listed}"
+    case "$apptype" in
+      'type="Foreground"') fail 'no Dock icon (lsappinfo lists it as Foreground)' ;;
+      '') echo 'note: not listed by lsappinfo, so the Dock check could not run' ;;
+      *) ok "no Dock icon ($apptype)" ;;
+    esac
     screencapture -x "$OUT/desktop.png" 2>/dev/null && ok 'screenshot saved (for review, not an assertion)' || echo 'note: no screenshot'
     ;;
 esac

@@ -231,3 +231,21 @@ and keeps the events in order. On Windows, Copilot CLI hooks are given as a `pow
 So on Windows the agent hooks run a console program. Releases therefore also ship
 `agentsemaphore-cli-windows-<arch>.exe`. The installer puts it next to the tray as `agentsemaphore-cli.exe`, and `hooks install` points the hooks at it. It
 is also the one to use for commands in a terminal, because the GUI build prints nothing there.
+
+## macOS: clicks and the Dock (2026-11-18; code reading and CI, no real Mac)
+
+**Clicks.** In fyne.io/systray v1.12.2 (`systray_darwin.m`) an event monitor sends every mouse-down
+on the menu bar item, right and Control clicks included, to the left-click handler (only clicks
+with Command held are passed through). With a left-click handler set
+(`SetOnTapped`), as on Windows and Linux to open Claude, the menu could not be opened at all on macOS.
+So on macOS no handler is set: a click shows the menu, as menu bar items usually do, and Claude is
+opened from the menu's "Open Claude". Found by reading the library code; not yet seen on a real Mac.
+
+**Dock.** The tray is a bare executable, not an `.app` bundle, and fyne.io/systray does not set an activation
+policy. On the `macos-latest` runner (Apple silicon) `lsappinfo` lists the running tray as
+`type="BackgroundOnly"`: no Dock icon and no app menu, only the menu bar item. The macOS end-to-end
+test now fails if it is ever listed as `Foreground`. Not yet seen on a real Mac.
+
+On macOS a red state is shown by the dot only. There is no taskbar to flash, and bouncing a Dock icon
+would need the Dock icon this app does not have; a notification would bring back the noise the project
+exists to remove.

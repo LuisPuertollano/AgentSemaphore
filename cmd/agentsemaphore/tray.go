@@ -105,7 +105,9 @@ func onReady(cfg trayConfig) {
 				openClaude()
 			}
 		}()
-		systray.SetOnTapped(openClaude) // left click opens Claude, right click shows the menu
+		if leftClickOpensClaude(runtime.GOOS) {
+			systray.SetOnTapped(openClaude) // left click opens Claude, right click shows the menu
+		}
 	}
 	var flashOn atomic.Bool // read by the refresh loop, written by the menu
 	flashOn.Store(cfg.settings.FlashOnRed)
@@ -243,3 +245,10 @@ func truncate(s string, max int) string {
 	}
 	return s
 }
+
+// leftClickOpensClaude: on macOS fyne.io/systray (v1.12.2, systray_darwin.m)
+// sends every click on the menu bar item, right and Control clicks included,
+// to the left-click handler, so with one set the menu could never be opened.
+// There a click shows the menu, as menu bar items usually do, and Claude is
+// opened from its "Open Claude" item.
+func leftClickOpensClaude(goos string) bool { return goos != "darwin" }

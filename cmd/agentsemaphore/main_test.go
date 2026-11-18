@@ -95,3 +95,15 @@ func TestReportURL(t *testing.T) {
 		}
 	}
 }
+
+func TestLeftClickOpensClaude(t *testing.T) {
+	// macOS: the menu must stay reachable (systray sends every click to the left handler).
+	if leftClickOpensClaude("darwin") {
+		t.Error("darwin: a click must show the menu")
+	}
+	for _, g := range []string{"windows", "linux"} {
+		if !leftClickOpensClaude(g) {
+			t.Errorf("%s: left click should open Claude", g)
+		}
+	}
+}
