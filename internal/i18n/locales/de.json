@@ -22,5 +22,9 @@
   "menu.sourceNothing": "nichts offen",
   "menu.sourceAbsent": "auf diesem System nicht gefunden",
   "menu.toastsRedOnly": "zeigt nur, was dich braucht",
-  "menu.notVisible": "Nicht sichtbar: Cloud-Sitzungen mit offenem Dialog, andere Rechner"
+  "menu.notVisible": "Nicht sichtbar: Cloud-Sitzungen mit offenem Dialog, andere Rechner",
+  "usage.title": "Plannutzung",
+  "usage.window5h": "5 Std. {pct} % (zurückgesetzt in {in})",
+  "usage.window7d": "Woche {pct} % (zurückgesetzt in {in})",
+  "usage.stale": "unbekannt: keine Claude-Code-Antwort seit dem letzten Zurücksetzen"
 }

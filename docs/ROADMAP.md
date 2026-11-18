@@ -79,7 +79,11 @@ Next:
 ## Phase 4 — Subscription usage (long term)
 - Optional panel with plan usage per provider, only from data the user's own tools already hold locally.
 - Researched 2026-11-18: the only documented local source of plan usage is Claude Code's status line
-  (`rate_limits` 5-hour and 7-day). Proposal and open questions: [docs/USAGE.md](USAGE.md).
+  (`rate_limits` 5-hour and 7-day). See [docs/USAGE.md](USAGE.md).
+- ✅ Claude Code: `agentsemaphore usage install claude` (opt-in; your own status line is still shown;
+  exact restore). A "Plan usage" menu group; it never changes the dot. Tested end-to-end on Linux,
+  macOS and Windows.
+- Later: "limit reached" from Claude Code hooks; Copilot (OpenTelemetry file export) if requested.
 
 ## Phase 5 — Public release
 - ✅ Repo public, MIT, README with visuals, contributing guide, pre-releases.

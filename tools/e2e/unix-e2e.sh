@@ -168,6 +168,25 @@ ok 'bad hook input: no output, exit 0 (never in the way of the agent)'
 "$EXE" hooks uninstall copilot >/dev/null && [ ! -e "$HOME/.copilot/hooks/agentsemaphore.json" ] || fail 'hooks uninstall copilot'
 ok 'hooks install / status / uninstall copilot'
 
+# --- plan usage through Claude Code's status line ----------------------------------------
+mkdir -p "$HOME/.claude"
+printf '{"model": "opus", "statusLine": {"type": "command", "command": "echo MY-LINE", "padding": 1}}\n' > "$HOME/.claude/settings.json"
+"$EXE" usage install claude >/dev/null || fail 'usage install claude'
+grep -q '" statusline' "$HOME/.claude/settings.json" || fail 'status line points to agentsemaphore'
+ok 'usage install claude: status line points to agentsemaphore'
+r5=$(( $(date +%s) + 9000 )); r7=$(( $(date +%s) + 259200 ))
+line=$(printf '{"model":{"display_name":"Opus"},"rate_limits":{"five_hour":{"used_percentage":23.5,"resets_at":%s},"seven_day":{"used_percentage":41.2,"resets_at":%s}}}' "$r5" "$r7" | "$EXE" statusline)
+[ "$line" = "MY-LINE" ] || fail "your own status line is still shown (got '$line')"
+ok 'your own status line is still shown'
+menu | grep -q 'Plan usage' && menu | grep -q '5 h 24 %.*week 41 %' || { once; fail 'menu shows the plan usage'; }
+ok 'menu shows the plan usage (5 h 24 %, week 41 %)'
+[ "$(state)" = green ] || fail 'usage never changes the dot'
+ok 'usage never changes the dot'
+"$EXE" usage uninstall claude >/dev/null || fail 'usage uninstall claude'
+python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d['statusLine']=={'type':'command','command':'echo MY-LINE','padding':1} and d['model']=='opus' else 1)" "$HOME/.claude/settings.json" \
+  || { cat "$HOME/.claude/settings.json"; fail 'usage uninstall restores the status line exactly'; }
+ok 'usage uninstall restores the status line exactly'
+
 # --- tray: single instance --------------------------------------------------------------
 write_session "$P0" e2e-wait waiting 'permission prompt'
 case "$(uname -s)" in

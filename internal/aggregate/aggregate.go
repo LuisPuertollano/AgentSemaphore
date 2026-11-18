@@ -22,6 +22,8 @@ type View struct {
 	Groups []Group
 	// NotVisible says what no source can see (shown at the end of the menu).
 	NotVisible string
+	// Usage: plan usage lines (title first), or none. Never changes State.
+	Usage []string
 }
 
 // Group is one source in the menu.

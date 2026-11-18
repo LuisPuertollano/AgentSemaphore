@@ -1,6 +1,14 @@
 # Phase 4 — subscription usage: findings and proposed design
 
-Status: **proposal, nothing implemented.** Researched 2026-11-18 from official documentation only.
+Status: **Claude Code part implemented (2026-11-18)**, opt-in. The maintainer agreed: install only on
+request, exact restore, usage shown in the menu only, Copilot later. Researched from official
+documentation only.
+
+```sh
+agentsemaphore usage install claude     # Windows: agentsemaphore-cli usage install claude
+agentsemaphore usage status claude
+agentsemaphore usage uninstall claude   # restores your previous status line exactly
+```
 
 ## Ground rules
 
@@ -30,7 +38,7 @@ Transcripts (`~/.claude/projects/…`, `~/.codex/history.jsonl`, `~/.copilot/ses
 `~/.gemini/tmp/…/chats/`) are excluded: they hold the conversation, and Claude Code documents its format
 as internal.
 
-## Proposed design (Claude Code first)
+## Design (Claude Code; implemented)
 
 1. **`agentsemaphore statusline`**, a status line wrapper.
    - Claude Code runs it with the status JSON on stdin.
@@ -47,15 +55,20 @@ as internal.
 3. **Menu.** A "Usage" group appears only when there is data, for example:
    `Claude: 5 h 23 % (resets 14:00) · week 41 % (resets Mon 09:00)`.
    - Data older than its reset time is shown as "unknown (no session since …)", never as 0 %.
-4. **Hooks.** `StopFailure: rate_limit` adds "limit reached" to that line until the next reset.
-5. **Settings.** `usage.enabled`, off by default.
+4. **Not yet:** a "limit reached" note from the hooks `StopFailure: rate_limit` (it needs Claude Code
+   hooks, which AgentSemaphore does not install today).
+5. **No extra setting.** Nothing shows until `usage install claude` has been run and Claude Code has
+   reported usage.
 6. **Tests.**
    - Unit tests: parsing, missing windows, stale data, wrapper pass-through and failure.
    - e2e: Claude Code is simulated by running the wrapper with sample JSON taken from the docs.
 
-## Open questions for the maintainer
+## Decisions (2026-11-18)
 
-1. Is it acceptable that `usage install claude` edits `~/.claude/settings.json` (only `statusLine`, opt-in,
-   with exact restore)? It is the only documented local source of plan usage.
-2. Should crossing a threshold (e.g. ≥ 90 % of the 5-hour window) ever change the dot, or stay in the menu?
-3. Copilot's OpenTelemetry file export: worth an opt-in later, or skip until someone asks?
+1. `usage install claude` may edit `~/.claude/settings.json` (only `statusLine`, opt-in, exact restore).
+2. Usage stays in the menu. It never changes the dot.
+3. Copilot's OpenTelemetry file export: later, if someone asks.
+
+On Windows the user's previous status line command is run through `bash` when it is on the PATH (as Git
+for Windows provides), otherwise through `cmd`. How Claude Code itself runs it on Windows is not
+documented. If the two differ, the wrapper falls back to its own short line.

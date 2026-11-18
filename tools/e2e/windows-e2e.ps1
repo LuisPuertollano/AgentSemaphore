@@ -128,6 +128,28 @@ try {
     $hookProcs | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
   }
 
+  # --- plan usage through Claude Code's status line ------------------------------------
+  $claudeSettings = Join-Path $env:USERPROFILE '.claude\settings.json'
+  $hadSettings = Test-Path $claudeSettings
+  if ($hadSettings) { $savedSettings = Get-Content $claudeSettings -Raw }
+  try {
+    New-Item -ItemType Directory -Force (Split-Path $claudeSettings) | Out-Null
+    Set-Content $claudeSettings '{"model": "opus", "statusLine": {"type": "command", "command": "echo MY-LINE", "padding": 1}}' -Encoding utf8
+    & $Exe usage install claude | Out-Null
+    Check ((Get-Content $claudeSettings -Raw) -match '\\" statusline') 'usage install claude: status line points to agentsemaphore'
+    $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    $status = '{"rate_limits":{"five_hour":{"used_percentage":23.5,"resets_at":' + ($now + 9000) + '},"seven_day":{"used_percentage":41.2,"resets_at":' + ($now + 259200) + '}}}'
+    $line = ($status | & $Exe statusline | Out-String).Trim()
+    Check ($line -match 'MY-LINE') "your own status line is still shown (got '$line')"
+    $m = Menu
+    Check ($m -match 'Plan usage' -and $m -match '5 h 24 %.*week 41 %') 'menu shows the plan usage'
+    & $Exe usage uninstall claude | Out-Null
+    $restored = Get-Content $claudeSettings -Raw | ConvertFrom-Json
+    Check ($restored.statusLine.command -eq 'echo MY-LINE' -and $restored.statusLine.padding -eq 1 -and $restored.model -eq 'opus') 'usage uninstall restores the status line exactly'
+  } finally {
+    if ($hadSettings) { Set-Content $claudeSettings $savedSettings -NoNewline } else { Remove-Item $claudeSettings -ErrorAction SilentlyContinue }
+  }
+
   # --- tray: single instance and screenshot -----------------------------------------
   $log = Join-Path $env:APPDATA 'AgentSemaphore\agentsemaphore.log'
   Write-Session $procs[0] 'e2e-wait' 'waiting' 'permission prompt'

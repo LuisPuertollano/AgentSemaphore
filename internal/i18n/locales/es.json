@@ -22,5 +22,9 @@
   "menu.sourceNothing": "nada pendiente",
   "menu.sourceAbsent": "no encontrado en este sistema",
   "menu.toastsRedOnly": "solo muestra lo que te necesita",
-  "menu.notVisible": "No visible: sesiones en la nube con un diálogo abierto, otras máquinas"
+  "menu.notVisible": "No visible: sesiones en la nube con un diálogo abierto, otras máquinas",
+  "usage.title": "Uso del plan",
+  "usage.window5h": "5 h {pct} % (se reinicia en {in})",
+  "usage.window7d": "semana {pct} % (se reinicia en {in})",
+  "usage.stale": "desconocido: ninguna respuesta de Claude Code desde el último reinicio"
 }
