@@ -22,5 +22,9 @@
   "menu.sourceNothing": "nothing pending",
   "menu.sourceAbsent": "not found on this system",
   "menu.toastsRedOnly": "shows only what needs you",
-  "menu.notVisible": "Not visible: cloud sessions while a dialog is open, other machines"
+  "menu.notVisible": "Not visible: cloud sessions while a dialog is open, other machines",
+  "usage.title": "Plan usage",
+  "usage.window5h": "5 h {pct} % (resets in {in})",
+  "usage.window7d": "week {pct} % (resets in {in})",
+  "usage.stale": "unknown: no Claude Code reply since the last reset"
 }

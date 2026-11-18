@@ -85,6 +85,10 @@ The worst state across all sessions wins. Hover for a summary, click for the lis
 | A session that ends its turn with a question in plain text | 🟢 shows idle | known gap ([#20](https://github.com/LuisPuertollano/AgentSemaphore/issues/20)) |
 | Other agents | ⏳ planned, ideas welcome | [Phase 3](https://github.com/LuisPuertollano/AgentSemaphore/issues/4) |
 
+**Optional: your Claude plan usage in the menu** (5-hour and weekly windows, from Claude Code's own status line):
+`agentsemaphore usage install claude`. Your own status line keeps showing, and `usage uninstall claude` puts
+everything back. It never changes the dot. Details: [docs/USAGE.md](docs/USAGE.md).
+
 Everything measured so far, including what is broken upstream, is in [docs/FINDINGS.md](docs/FINDINGS.md).
 
 ## Languages
@@ -136,7 +140,7 @@ daily yet: if you do, a quick test report is very welcome.
 1. ✅ Harden the Windows prototype
 2. 🚧 Cross-platform core: ✅ Windows · 🚧 Linux and macOS (installer and CI tests done; real-desktop reports wanted)
 3. 🚧 More agents: Copilot CLI, Codex CLI and Gemini CLI through their hooks (built and CI-tested, real-CLI reports wanted)
-4. ⏳ Optional view of your subscription usage, from local data only
+4. 🚧 Optional view of your subscription usage, from local data only: ✅ Claude Code (opt-in)
 5. ⏳ Public release with a landing page
 
 Live tracking: [docs/ROADMAP.md](docs/ROADMAP.md) and the [issues](https://github.com/LuisPuertollano/AgentSemaphore/issues).

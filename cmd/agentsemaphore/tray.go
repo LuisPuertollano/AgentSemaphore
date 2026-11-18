@@ -40,6 +40,10 @@ func menuRows(v aggregate.View) []string {
 			rows = append(rows, "    "+g.Note)
 		}
 	}
+	if len(v.Usage) > 0 {
+		rows = append(rows, "■ "+v.Usage[0])
+		rows = append(rows, v.Usage[1:]...)
+	}
 	if v.NotVisible != "" {
 		rows = append(rows, "ⓘ "+v.NotVisible)
 	}

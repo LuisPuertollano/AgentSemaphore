@@ -10,6 +10,9 @@
 //	                          register this program in another agent's hook system
 //	agentsemaphore hook <agent> <event>
 //	                          what those hooks run (event JSON on stdin); always exits 0
+//	agentsemaphore usage install|uninstall|status claude
+//	                          show Claude plan usage in the menu, via Claude Code's status line
+//	agentsemaphore statusline what that status line runs (status JSON on stdin); always exits 0
 package main
 
 import (
@@ -32,6 +35,7 @@ import (
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source/claudecode"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source/hooks"
 	"github.com/LuisPuertollano/AgentSemaphore/internal/source/toasts"
+	"github.com/LuisPuertollano/AgentSemaphore/internal/usage"
 )
 
 // version is set at build time: -ldflags "-X main.version=..."
@@ -44,6 +48,10 @@ func main() {
 			os.Exit(runHook(os.Args[2:]))
 		case "hooks":
 			os.Exit(runHooks(os.Args[2:]))
+		case "statusline":
+			os.Exit(runStatusline())
+		case "usage":
+			os.Exit(runUsage(os.Args[2:]))
 		}
 	}
 	once := flag.Bool("once", false, "read all sources once, print JSON and exit")
@@ -168,7 +176,11 @@ func poll(sources []source.Source, lang string) aggregate.View {
 	for _, s := range sources {
 		results = append(results, safePoll(s))
 	}
-	return aggregate.Build(results, lang)
+	v := aggregate.Build(results, lang)
+	if dir, err := usage.Dir(); err == nil {
+		v.Usage = usage.MenuLines(dir, lang, time.Now())
+	}
+	return v
 }
 
 // safePoll turns a panicking source into an Error result (grey), never a crash.

@@ -22,5 +22,9 @@
   "menu.sourceNothing": "niente in sospeso",
   "menu.sourceAbsent": "non trovato su questo sistema",
   "menu.toastsRedOnly": "mostra solo ciò che ti aspetta",
-  "menu.notVisible": "Non visibile: sessioni cloud con una finestra di dialogo aperta, altri computer"
+  "menu.notVisible": "Non visibile: sessioni cloud con una finestra di dialogo aperta, altri computer",
+  "usage.title": "Utilizzo del piano",
+  "usage.window5h": "5 h {pct} % (azzeramento tra {in})",
+  "usage.window7d": "settimana {pct} % (azzeramento tra {in})",
+  "usage.stale": "sconosciuto: nessuna risposta di Claude Code dall'ultimo azzeramento"
 }
