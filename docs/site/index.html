@@ -116,6 +116,7 @@
     <h3>Windows (x64 and ARM64)</h3>
     <p>Per user, no admin rights, PowerShell 7. From a clone of the repository:</p>
     <pre><code>pwsh -File install/windows/install.ps1 -FromRelease -Autostart</code></pre>
+    <p>It also installs <code>agentsemaphore-cli.exe</code>, the console build for commands in a terminal and for agent hooks.</p>
     <p>It downloads the newest release for your machine and checks its SHA-256. Add <code>-WhatIf</code> to see every change first.</p>
     <h3>Linux and macOS</h3>
     <p>Per user, no sudo:</p>
@@ -125,6 +126,16 @@
     <p>Details and uninstall:
       <a href="https://github.com/LuisPuertollano/AgentSemaphore/tree/main/install/windows">Windows</a> ·
       <a href="https://github.com/LuisPuertollano/AgentSemaphore/tree/main/install/unix">Linux and macOS</a>.</p>
+  </section>
+
+  <section>
+    <h2>Testers wanted</h2>
+    <p>Especially on <b>macOS</b>, <b>Linux desktops</b> (GNOME, KDE, …) and with <b>GitHub Copilot CLI</b>,
+      <b>OpenAI Codex CLI</b> or <b>Gemini CLI</b>: so far those are tested only in CI. Install it, use your agents as
+      usual for a while, then fill in a short test report. “All fine” is useful too.</p>
+    <div class="buttons" style="justify-content:flex-start">
+      <a class="btn primary" href="https://github.com/LuisPuertollano/AgentSemaphore/issues/new?template=test-report.yml">Send a test report</a>
+    </div>
   </section>
 
   <section>

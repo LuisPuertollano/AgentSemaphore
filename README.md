@@ -25,6 +25,13 @@
 > **If you try it, you are warmly invited to help:** report what you see on your system, share findings about
 > agents' state files or notifications, or send a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+### 🧪 Testers wanted
+
+Especially on **macOS**, **Linux desktops** (GNOME, KDE, …) and with **GitHub Copilot CLI**, **OpenAI Codex CLI**
+or **Gemini CLI**: those are tested only in CI so far. Install it ([below](#install)), use your agents as usual for
+a while, and fill in a short [test report](https://github.com/LuisPuertollano/AgentSemaphore/issues/new?template=test-report.yml).
+"All fine" is a useful report too. Website: https://luispuertollano.github.io/AgentSemaphore/
+
 <p align="center">
   <img src="docs/images/tray-demo.svg" width="720" alt="Illustration: the tray dot changes colour and its tooltip says who is waiting">
 </p>

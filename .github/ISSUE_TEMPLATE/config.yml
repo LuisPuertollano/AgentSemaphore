@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: What AgentSemaphore can see, and the known gaps
+    url: https://github.com/LuisPuertollano/AgentSemaphore/blob/main/docs/FINDINGS.md
+    about: Measured behaviour of each agent, and what is known to be broken upstream
