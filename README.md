@@ -36,6 +36,20 @@ a while, and fill in a short [test report](https://github.com/LuisPuertollano/Ag
   <img src="docs/images/tray-demo.svg" width="720" alt="Illustration: the tray dot changes colour and its tooltip says who is waiting">
 </p>
 
+### Real screenshots
+
+The real program on a Linux desktop panel (XFCE), with three example Claude Code sessions. The menu
+groups the sessions per source and says why one is waiting:
+
+<p align="center">
+  <img src="docs/images/screenshot-linux-colours.png" width="300" alt="Screenshot: the dot next to the clock, red, orange and green">&nbsp;&nbsp;
+  <img src="docs/images/screenshot-linux-tooltip.png" width="340" alt="Screenshot: tooltip '1 waiting, 1 working, 1 idle, docs-site'"><br>
+  <img src="docs/images/screenshot-linux-menu.png" width="545" alt="Screenshot: menu listing docs-site (permission prompt), api-refactor and notes">
+</p>
+
+They are made by `tools/screenshots/linux.sh` on a virtual display. Windows and macOS screenshots from testers
+are welcome.
+
 ## The four colours
 
 | | Meaning |
