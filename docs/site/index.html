@@ -53,6 +53,8 @@
   th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-weight: 600; }
   .table-wrap { overflow-x: auto; }
+  .shots { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+  .shots img { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); }
   ul.points { padding-left: 1.2em; } ul.points li { margin: 6px 0; }
   footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted);
            font-size: .9rem; text-align: center; }
@@ -78,6 +80,16 @@
     <a href="https://github.com/LuisPuertollano/AgentSemaphore/blob/main/CONTRIBUTING.md">contribute</a>.</div>
 
   <img class="demo" src="images/tray-demo.svg" alt="Illustration: the tray dot changes colour and its tooltip says who is waiting">
+
+  <section>
+    <h2>Real screenshots</h2>
+    <p>The real program on a Linux desktop panel (XFCE) with three example sessions: the dot, its tooltip and its menu.</p>
+    <div class="shots">
+      <img src="images/screenshot-linux-colours.png" width="300" alt="The dot next to the clock: red, orange and green">
+      <img src="images/screenshot-linux-tooltip.png" width="340" alt="Tooltip: 1 waiting, 1 working, 1 idle, docs-site">
+      <img src="images/screenshot-linux-menu.png" width="545" alt="Menu listing docs-site (permission prompt), api-refactor and notes">
+    </div>
+  </section>
 
   <section>
     <h2>The four colours</h2>
@@ -117,6 +129,8 @@
     <p>Per user, no admin rights, PowerShell 7. From a clone of the repository:</p>
     <pre><code>pwsh -File install/windows/install.ps1 -FromRelease -Autostart</code></pre>
     <p>It also installs <code>agentsemaphore-cli.exe</code>, the console build for commands in a terminal and for agent hooks.</p>
+    <p>Or with <a href="https://scoop.sh">Scoop</a> (from v0.1.0-alpha.4; use the newest release tag):</p>
+    <pre><code>scoop install https://github.com/LuisPuertollano/AgentSemaphore/releases/download/v0.1.0-alpha.4/agentsemaphore.json</code></pre>
     <p>It downloads the newest release for your machine and checks its SHA-256. Add <code>-WhatIf</code> to see every change first.</p>
     <h3>Linux and macOS</h3>
     <p>Per user, no sudo:</p>

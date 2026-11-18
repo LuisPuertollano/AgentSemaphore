@@ -78,10 +78,15 @@ Next:
 
 ## Phase 4 — Subscription usage (long term)
 - Optional panel with plan usage per provider, only from data the user's own tools already hold locally.
+- Researched 2026-11-18: the only documented local source of plan usage is Claude Code's status line
+  (`rate_limits` 5-hour and 7-day). Proposal and open questions: [docs/USAGE.md](USAGE.md).
 
 ## Phase 5 — Public release
-- ✅ Repo public, MIT, README with visuals, contributing guide, pre-release.
-- GitHub Pages landing page, real screenshots/GIFs, install instructions per OS.
+- ✅ Repo public, MIT, README with visuals, contributing guide, pre-releases.
+- ✅ Website (GitHub Pages), real screenshots (Linux, XFCE; `tools/screenshots/linux.sh`), test-report form.
+- ✅ Scoop manifest with every release (Windows), installed and checked in CI.
+- Next: Homebrew (needs a tap kept in step with each release) and winget (needs a pull request to
+  microsoft/winget-pkgs per release); Windows/macOS screenshots from testers.
 - Everything free; no telemetry.
 
 ## Ideas (not scheduled)
