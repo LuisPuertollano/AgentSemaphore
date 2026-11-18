@@ -86,3 +86,12 @@ func TestResendIcon(t *testing.T) {
 		t.Fatal("every 30th tick re-sends")
 	}
 }
+
+func TestReportURL(t *testing.T) {
+	u := reportURL("v0.1.0-alpha.5")
+	for _, want := range []string{"/issues/new?", "template=test-report.yml", "version=v0.1.0-alpha.5", "title=Test+report%3A+"} {
+		if !strings.Contains(u, want) {
+			t.Errorf("%s: missing %q", u, want)
+		}
+	}
+}

@@ -147,6 +147,17 @@ func onReady(cfg trayConfig) {
 		}
 	}()
 	systray.AddSeparator()
+	report := systray.AddMenuItem(T("menu.testReport"), "")
+	go func() {
+		for range report.ClickedCh {
+			if err := desktop.OpenURL(reportURL(version)); err != nil {
+				cfg.log.Printf("open test report form: %v", err)
+			}
+		}
+	}()
+	ver := systray.AddMenuItem(T("menu.version", "v", version), "")
+	ver.Disable()
+	systray.AddSeparator()
 	quit := systray.AddMenuItem(T("menu.quit"), "")
 	go func() {
 		<-quit.ClickedCh

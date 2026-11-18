@@ -52,7 +52,7 @@ xdotool mousemove 853 404; sleep 3
 shot tooltip 340x112+560+308
 # Menu: click the dot.
 xdotool click 1; sleep 2
-shot menu 545x270+355+150
+shot menu 545x340+355+80
 xdotool key Escape; sleep 1
 
 # Orange, then green.

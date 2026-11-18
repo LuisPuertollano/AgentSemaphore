@@ -14,6 +14,8 @@
   "menu.language": "语言",
   "menu.languageAuto": "跟随系统",
   "menu.quit": "退出",
+  "menu.testReport": "发送测试报告…",
+  "menu.version": "版本 {v}",
   "reason.toast": "聊天/Cowork",
   "source.claudeCode": "Claude Code 会话",
   "source.claudeDesktopToasts": "Claude Desktop 通知",

@@ -77,6 +77,7 @@ if [ "$MODE" = tray-linux ]; then
   wait_snap 'd["state"] == "red"' 'tray dot is red' 20
   wait_snap '"1 waiting" in d["tooltip"] and "e2e-wait" in d["tooltip"]' 'tooltip counts the waiting session and names it' 10
   wait_snap 'any("e2e-wait" in m and "permission prompt" in m for m in d["menu"]) and d["menu"][-1] == "Quit"' 'menu shows the session, why it waits, and Quit' 10
+  wait_snap 'any(m.startswith("Send a test report") for m in d["menu"]) and any(m.startswith("Version ") for m in d["menu"])' 'menu has "Send a test report" and the version' 5
   cp "$SNAP" "$OUT/snapshot-red.json"
 
   write_session "$P0" e2e-wait busy

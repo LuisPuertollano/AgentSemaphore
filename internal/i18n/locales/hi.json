@@ -14,6 +14,8 @@
   "menu.language": "भाषा",
   "menu.languageAuto": "सिस्टम के अनुसार",
   "menu.quit": "बंद करें",
+  "menu.testReport": "परीक्षण रिपोर्ट भेजें…",
+  "menu.version": "संस्करण {v}",
   "reason.toast": "चैट/Cowork",
   "source.claudeCode": "Claude Code सत्र",
   "source.claudeDesktopToasts": "Claude Desktop सूचनाएँ",
