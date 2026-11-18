@@ -80,8 +80,11 @@ Next:
 - Optional panel with plan usage per provider, only from data the user's own tools already hold locally.
 
 ## Phase 5 — Public release
-- ✅ Repo public, MIT, README with visuals, contributing guide, pre-release.
-- GitHub Pages landing page, real screenshots/GIFs, install instructions per OS.
+- ✅ Repo public, MIT, README with visuals, contributing guide, pre-releases.
+- ✅ Website (GitHub Pages), real screenshots (Linux, XFCE; `tools/screenshots/linux.sh`), test-report form.
+- ✅ Scoop manifest with every release (Windows), installed and checked in CI.
+- Next: Homebrew (needs a tap kept in step with each release) and winget (needs a pull request to
+  microsoft/winget-pkgs per release); Windows/macOS screenshots from testers.
 - Everything free; no telemetry.
 
 ## Ideas (not scheduled)

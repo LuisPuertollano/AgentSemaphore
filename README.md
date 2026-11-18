@@ -108,6 +108,16 @@ This downloads the newest release for your machine (pre-releases included) and c
 the PowerShell prototype and the uninstaller: [install/windows](install/windows/README.md). If the dot hides
 behind the **^** arrow next to the clock, drag it onto the taskbar.
 
+**Or with [Scoop](https://scoop.sh)** (no clone needed; replace the version with the
+[newest release](https://github.com/LuisPuertollano/AgentSemaphore/releases)):
+
+```powershell
+scoop install https://github.com/LuisPuertollano/AgentSemaphore/releases/download/v0.1.0-alpha.4/agentsemaphore.json
+```
+
+It adds AgentSemaphore to the Start menu and an `agentsemaphore` command (the console build) to your PATH.
+Tick "Start with the system" in its menu to start it at sign-in.
+
 ### Linux and macOS (in progress)
 
 The same Go core runs on Linux x64/ARM64 and macOS and reads Claude Code sessions. One line, no sudo:

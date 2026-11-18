@@ -21,6 +21,18 @@ commands in a terminal and for agent hooks (`agentsemaphore-cli hooks install co
 `-FromRelease` checks the download against the release's `SHA256SUMS.txt` and refuses it on a mismatch.
 `-Autostart` adds the same `HKCU\…\Run` entry the app's own "Start with the system" menu uses.
 
+## With Scoop
+
+From v0.1.0-alpha.4 each release has a Scoop manifest:
+
+```powershell
+scoop install https://github.com/LuisPuertollano/AgentSemaphore/releases/download/<tag>/agentsemaphore.json
+```
+
+It installs the tray program and the console build, adds a Start menu shortcut, and makes
+`agentsemaphore` (the console build) available in a terminal. Autostart: "Start with the system" in the
+menu. Remove with `scoop uninstall agentsemaphore`. CI installs it with Scoop on x64 and ARM64.
+
 ## PowerShell prototype
 
 ```powershell

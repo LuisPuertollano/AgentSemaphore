@@ -158,6 +158,33 @@ jobs:
           go-version-file: go.mod
       - run: go test ./...
 
+  scoop:
+    name: Scoop install (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, windows-11-arm]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5
+      - name: Manifest generator tests
+        run: python -m unittest discover -s tools/release -v
+      - name: Manifest for the newest release, then install, run, uninstall with Scoop
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          . ./install/windows/common.ps1
+          $rel = Get-Release ''
+          $tag = $rel.tag_name
+          $dist = Join-Path $env:RUNNER_TEMP 'dist'; New-Item -ItemType Directory -Force $dist | Out-Null
+          Invoke-WebRequest "https://github.com/${{ github.repository }}/releases/download/$tag/SHA256SUMS.txt" -OutFile (Join-Path $dist 'SHA256SUMS.txt')
+          $manifest = Join-Path $env:RUNNER_TEMP 'agentsemaphore.json'
+          python tools/release/scoop.py $tag $dist | Set-Content -LiteralPath $manifest -Encoding utf8
+          ./tools/release/test-scoop.ps1 -Manifest $manifest -Version $tag
+
   site:
     name: Landing page (links)
     runs-on: ubuntu-latest

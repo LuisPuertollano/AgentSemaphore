@@ -79,6 +79,8 @@ jobs:
           merge-multiple: true
       - name: Checksums
         run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Scoop manifest
+        run: python3 tools/release/scoop.py "$VERSION" dist > dist/agentsemaphore.json && cat dist/agentsemaphore.json
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -138,6 +140,7 @@ jobs:
           $got = (Get-Content -LiteralPath $out -Raw).Trim()
           Write-Host "Installed: $got"
           if ($got -ne "agentsemaphore $env:VERSION") { throw "Expected agentsemaphore $env:VERSION, got '$got'" }
+          ./tools/release/test-scoop.ps1 -Manifest "https://github.com/${{ github.repository }}/releases/download/$env:VERSION/agentsemaphore.json" -Version $env:VERSION
           $cli = Join-Path $dir 'agentsemaphore-cli.exe'
           if (-not (Test-Path $cli)) { throw 'console build agentsemaphore-cli.exe not installed' }
           $cliGot = (& $cli -version).Trim()
