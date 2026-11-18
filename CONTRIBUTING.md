@@ -5,11 +5,13 @@ most useful things you can do.
 
 ## Ways to help
 
-- **Try it and report what you see.** Open an issue with your OS (and architecture), the agent and version,
-  what the tray showed and what the agent was actually doing.
+- **Try it and report what you see.** Use the [test report](https://github.com/LuisPuertollano/AgentSemaphore/issues/new?template=test-report.yml)
+  form: your OS and architecture, the agents and versions, what the tray showed and what the agent was actually
+  doing. Reports from macOS, Linux desktops and from Copilot, Codex or Gemini CLI users are the most needed.
 - **Share findings.** How an agent stores its live state, which notifications it posts, what changed in a
   new version. `docs/FINDINGS.md` records what has been measured so far; corrections are very welcome.
-- **Add a source for another agent** (Gemini CLI, Codex CLI, Copilot CLI, …). One package per source under
+- **Add a source for another agent.** Copilot, Codex and Gemini CLI go through `internal/source/hooks`
+  (see `docs/AGENTS.md`); other agents may need their own package. One package per source under
   `internal/source/`, read-only towards the agent, failing soft (unknown → grey, never a wrong green).
 - **Translations.** UI strings live in `internal/i18n/locales/*.json`. A test checks every key exists in every language.
 

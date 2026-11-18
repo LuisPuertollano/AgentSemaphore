@@ -1,0 +1,72 @@
+name: Test report
+description: You tried AgentSemaphore on your machine. Tell us what worked and what did not. Every report helps, also "all fine".
+title: "Test report: <OS> / <agents>"
+labels: ["test-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing! A short report is fine. Please do not paste anything you consider private:
+        session names and folder names can appear in the outputs below, so edit them out if needed.
+  - type: dropdown
+    id: os
+    attributes:
+      label: System
+      options:
+        - Windows 11 x64
+        - Windows 11 ARM64
+        - Windows 10
+        - macOS, Apple silicon
+        - macOS, Intel
+        - Linux x64
+        - Linux ARM64
+        - Other (say below)
+    validations:
+      required: true
+  - type: input
+    id: desktop
+    attributes:
+      label: Desktop / version
+      description: "e.g. Windows 11 24H2, macOS 26.1, Ubuntu 26.04 GNOME, Fedora KDE Plasma 6"
+  - type: input
+    id: version
+    attributes:
+      label: AgentSemaphore version
+      description: "Output of `agentsemaphore -version` (Windows: `agentsemaphore-cli -version`)"
+    validations:
+      required: true
+  - type: checkboxes
+    id: agents
+    attributes:
+      label: Agents you used
+      options:
+        - label: Claude Code CLI
+        - label: Claude Desktop, Code tab
+        - label: Claude Desktop, chat / Cowork / scheduled tasks
+        - label: GitHub Copilot CLI (hooks)
+        - label: OpenAI Codex CLI (hooks)
+        - label: Gemini CLI (hooks)
+  - type: checkboxes
+    id: worked
+    attributes:
+      label: What worked
+      options:
+        - label: Install script
+        - label: The dot shows in the tray / menu bar
+        - label: Red while an agent waited for me (question, permission, plan)
+        - label: Orange while an agent worked
+        - label: Green when all was quiet
+        - label: Tooltip and menu list the right sessions
+        - label: Start with the system (autostart)
+        - label: Uninstall
+  - type: textarea
+    id: problems
+    attributes:
+      label: What did not work, or surprised you
+      description: What you did, what you expected, what you saw. Screenshots are welcome.
+  - type: textarea
+    id: once
+    attributes:
+      label: Output of `agentsemaphore -once` (optional)
+      description: "Run it while the problem is visible. It prints the state as JSON; edit out names you do not want to share."
+      render: json
