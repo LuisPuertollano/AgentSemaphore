@@ -18,12 +18,12 @@ This file keeps the overview; the issues hold the details and progress.
 - macOS: no paid notarization; unsigned build with a documented manual step.
 - Order for Phase 1: settings, i18n and installer first, then the verifications and the grey state.
 
-## Status (2026-11-17)
-- Pre-releases: [v0.1.0-alpha.1](https://github.com/LuisPuertollano/AgentSemaphore/releases/tag/v0.1.0-alpha.1) and
-  [v0.1.0-alpha.2](https://github.com/LuisPuertollano/AgentSemaphore/releases/tag/v0.1.0-alpha.2)
-  (Windows x64/ARM64, Linux x64/ARM64, macOS Intel/Apple silicon), with install scripts for
-  Windows (`install/windows`) and Linux/macOS (`install/unix`). Every release is installed and
-  checked by CI right after publishing.
+## Status (2026-11-18)
+- Pre-releases from v0.1.0-alpha.1 on, all on the
+  [releases page](https://github.com/LuisPuertollano/AgentSemaphore/releases): Windows x64/ARM64
+  (tray and console build), Linux x64/ARM64, macOS Intel/Apple silicon, `SHA256SUMS.txt` and a Scoop
+  manifest. Install scripts for Windows (`install/windows`) and Linux/macOS (`install/unix`). Every
+  release is installed and checked by CI right after publishing.
 - Real-machine testing so far: Windows 11 ARM64 only. Linux and macOS are tested in CI only
   (no maintainer machine), so reports from users of those systems are very welcome.
 
@@ -47,7 +47,7 @@ Done:
   notifications on Windows), worst-state aggregation, tray with tooltip and menu.
 - ✅ Windows: left click opens Claude, taskbar flash, autostart, single instance, installer
   (`-FromRelease` with SHA-256 check). End-to-end tests on Windows 11 ARM64 and x64 in CI.
-- ✅ Releases: six binaries + `SHA256SUMS.txt`, published from a tag or by hand; each release is
+- ✅ Releases: eight binaries (incl. the Windows console build) + `SHA256SUMS.txt`, published from a tag or by hand; each release is
   installed and checked on Windows, Linux and macOS right after publishing.
 - ✅ PID reuse on Linux: `procStart` (verified format, see FINDINGS) tells a live session from an
   old file whose pid now belongs to a newer process.
@@ -57,9 +57,12 @@ Done:
 
 - ✅ Linux and macOS install script (`install/unix`): downloads the release, checks SHA-256,
   autostart through the app itself, clean uninstall; tested in CI on the same three systems.
+- ✅ macOS: a click shows the menu, whose "Open Claude" runs `open -a Claude` (a left click cannot
+  open Claude there without hiding the menu, see FINDINGS); no Dock icon (checked in CI); a red
+  state is shown by the dot only (no Dock bounce, no extra notification).
+  Not yet tried on a real Mac.
 
 Next:
-- macOS: what "open Claude" and a red alert should do there; no Dock icon.
 - Linux: check the tray on real desktops. GNOME shows tray icons only with the AppIndicator
   extension (Ubuntu enables it by default); other desktops are untested so far. In CI where
   possible, otherwise by user reports.
