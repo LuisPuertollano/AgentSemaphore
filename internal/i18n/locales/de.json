@@ -14,6 +14,8 @@
   "menu.language": "Sprache",
   "menu.languageAuto": "Wie das System",
   "menu.quit": "Beenden",
+  "menu.testReport": "Testbericht senden…",
+  "menu.version": "Version {v}",
   "reason.toast": "Chat/Cowork",
   "source.claudeCode": "Claude-Code-Sitzungen",
   "source.claudeDesktopToasts": "Claude-Desktop-Benachrichtigungen",
