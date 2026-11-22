@@ -8,13 +8,13 @@
 #  - the extension's StatusNotifierWatcher lists our tray;
 #  - GNOME's top bar holds a visible AppIndicator button for it (asked inside
 #    the shell through org.gnome.Shell.Eval);
-#  - a screenshot of the top bar, saved for review, shows red pixels.
+#  - a screenshot of the top bar shows the dot's red (saved for review too).
 # To ask the shell and take the screenshot, a tiny test-only extension turns
 # on GNOME's "unsafe mode" (the same switch as Looking Glass). It lives only in
 # the scratch HOME below; nothing of the real user is read or written.
 #
 # Needs: gnome-shell, gnome-shell-extension-appindicator, dbus-run-session,
-# python3 (Pillow optional, for the colour check). A system bus with logind,
+# python3 with Pillow. A system bus with logind,
 # as GitHub's Ubuntu runners have.
 #
 # usage: gnome-e2e.sh <agentsemaphore binary> <fakeagent binary>
@@ -108,30 +108,24 @@ shell_eval "$panel" | tee "$OUT/panel.txt"
 # Screenshot of the whole virtual monitor; the top bar is its first ~32 px.
 sleep 3
 gdbus call --session --dest org.gnome.Shell.Screenshot --object-path /org/gnome/Shell/Screenshot \
-  --method org.gnome.Shell.Screenshot.Screenshot false false "$OUT/gnome-red.png" > "$OUT/screenshot.txt" 2>&1 || true
-cat "$OUT/screenshot.txt"
-if [ -s "$OUT/gnome-red.png" ]; then
-  ok 'screenshot saved'
-  if python3 -c 'import PIL' 2>/dev/null; then
-    reds=$(python3 - "$OUT/gnome-red.png" <<'EOF'
+  --method org.gnome.Shell.Screenshot.Screenshot false false "$OUT/gnome-red.png" > "$OUT/screenshot.txt" 2>&1 \
+  || { cat "$OUT/screenshot.txt"; show_logs; fail 'screenshot of the virtual monitor'; }
+[ -s "$OUT/gnome-red.png" ] || fail 'screenshot of the virtual monitor'
+ok 'screenshot saved'
+reds=$(python3 - "$OUT/gnome-red.png" <<'PY'
 import sys
 from PIL import Image
 im = Image.open(sys.argv[1]).convert("RGB")
-w, _ = im.size
-top = im.crop((0, 0, w, 40))
+top = im.crop((0, 0, im.size[0], 40))
 top.save(sys.argv[1].replace(".png", "-topbar.png"))
-print(sum(1 for r, g, b in top.getdata() if abs(r - 220) < 30 and abs(g - 38) < 30 and abs(b - 38) < 30))
-EOF
+px = top.tobytes()
+print(sum(1 for i in range(0, len(px), 3)
+          if abs(px[i] - 220) < 30 and abs(px[i + 1] - 38) < 30 and abs(px[i + 2] - 38) < 30))
+PY
 )
-    echo "red pixels in the top bar: $reds"
-    [ "$reds" -ge 20 ] || fail 'the dot in the top bar is red'
-    ok 'the dot in the top bar is red'
-  else
-    echo 'note: Pillow not installed, colour of the screenshot not checked'
-  fi
-else
-  echo 'note: no screenshot (informational)'
-fi
+echo "red pixels in the top bar: $reds"
+[ "$reds" -ge 20 ] || fail 'the dot in the top bar is red'
+ok 'the dot in the top bar is red'
 
 kill -0 "$TRAY" 2>/dev/null || { show_logs; fail 'tray app keeps running'; }
 ok 'tray app keeps running'

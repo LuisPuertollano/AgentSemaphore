@@ -14,7 +14,7 @@ with Claude Desktop and Claude Code. Everything else has been tested in CI only,
 | Where | What we most want to know |
 |---|---|
 | **macOS** (Apple silicon or Intel) | Does the dot appear in the menu bar? Does a **click open its menu** (new in alpha.6)? Does it turn red while Claude Code waits for you? Is there **no** Dock icon? Intel Macs: the same (run in CI on macOS 15 Intel, not yet on a real Intel Mac) |
-| **Linux desktops** (GNOME, KDE Plasma, Cinnamon, XFCE, …) | Does the dot appear in the panel, with the right colour, tooltip and menu? |
+| **Linux desktops** (GNOME, KDE Plasma, Cinnamon, XFCE, …) | Does the dot appear in the panel, with the right colour, tooltip and menu? GNOME 50 with the AppIndicator extension is checked in CI (headless, Ubuntu 26.04): reports from real GNOME sessions, other versions and other desktops are what we lack |
 | **Copilot CLI, Codex CLI, Gemini CLI** (any system) | After `agentsemaphore hooks install <agent>`: red when the agent asks you something, orange while it works, green when it is done ([docs/AGENTS.md](AGENTS.md)) |
 | **Windows x64** | The same as on ARM64: dot, red on a Claude Desktop notification, left click opens Claude |
 
