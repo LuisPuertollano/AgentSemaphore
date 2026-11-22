@@ -25,8 +25,9 @@ This file keeps the overview; the issues hold the details and progress.
   manifest. Install scripts for Windows (`install/windows`) and Linux/macOS (`install/unix`). Every
   release is installed and checked by CI right after publishing.
 - Real-machine testing so far: Windows 11 ARM64 only. On 2026-11-22, v0.1.0-alpha.5 installed from the
-  release: a real Claude Desktop notification turned the dot red, and a left click opened Claude. The
-  taskbar flash on red is not confirmed yet. Linux and macOS are tested in CI only (no maintainer
+  release: a real Claude Desktop notification turned the dot red, and a left click opened Claude.
+  Claude Desktop flashes its own taskbar button on a reply, so the tray's own flash could not be told
+  apart there (see FINDINGS). Linux and macOS are tested in CI only (no maintainer
   machine), so reports from users of those systems are very welcome.
 
 ## Phase 0 — Windows prototype ✅ (2026-11-14)

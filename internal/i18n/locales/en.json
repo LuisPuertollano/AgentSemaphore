@@ -9,7 +9,7 @@
   "tooltip.starting": "Starting…",
   "menu.noSessions": "Nothing is waiting (no active sessions)",
   "menu.openClaude": "Open Claude",
-  "menu.flashOnRed": "Flash the taskbar when it turns red",
+  "menu.flashOnRed": "Flash Claude in the taskbar when it turns red",
   "menu.startWithSystem": "Start with the system",
   "menu.language": "Language",
   "menu.languageAuto": "Same as the system",

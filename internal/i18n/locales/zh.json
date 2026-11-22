@@ -9,7 +9,7 @@
   "tooltip.starting": "正在启动…",
   "menu.noSessions": "没有需要你处理的事（无活动会话）",
   "menu.openClaude": "打开 Claude",
-  "menu.flashOnRed": "变红时闪烁任务栏",
+  "menu.flashOnRed": "变红时让任务栏中的 Claude 闪烁",
   "menu.startWithSystem": "开机启动",
   "menu.language": "语言",
   "menu.languageAuto": "跟随系统",

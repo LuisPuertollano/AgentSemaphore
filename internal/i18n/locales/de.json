@@ -9,7 +9,7 @@
   "tooltip.starting": "Wird gestartet…",
   "menu.noSessions": "Nichts wartet (keine aktiven Sitzungen)",
   "menu.openClaude": "Claude öffnen",
-  "menu.flashOnRed": "Taskleiste blinkt, wenn es rot wird",
+  "menu.flashOnRed": "Claude in der Taskleiste blinken lassen, wenn es rot wird",
   "menu.startWithSystem": "Mit dem System starten",
   "menu.language": "Sprache",
   "menu.languageAuto": "Wie das System",

@@ -9,7 +9,7 @@
   "tooltip.starting": "Iniciando…",
   "menu.noSessions": "Nada te espera (sin sesiones activas)",
   "menu.openClaude": "Abrir Claude",
-  "menu.flashOnRed": "Parpadeo en la barra de tareas al ponerse en rojo",
+  "menu.flashOnRed": "Hacer parpadear Claude en la barra de tareas al ponerse en rojo",
   "menu.startWithSystem": "Arrancar con el sistema",
   "menu.language": "Idioma",
   "menu.languageAuto": "El del sistema",
