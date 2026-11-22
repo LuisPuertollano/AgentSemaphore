@@ -117,7 +117,7 @@ behind the **^** arrow next to the clock, drag it onto the taskbar.
 [newest release](https://github.com/LuisPuertollano/AgentSemaphore/releases)):
 
 ```powershell
-scoop install https://github.com/LuisPuertollano/AgentSemaphore/releases/download/v0.1.0-alpha.5/agentsemaphore.json
+scoop install https://github.com/LuisPuertollano/AgentSemaphore/releases/download/v0.1.0-alpha.6/agentsemaphore.json
 ```
 
 It adds AgentSemaphore to the Start menu and an `agentsemaphore` command (the console build) to your PATH.
