@@ -147,6 +147,33 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  gnome:
+    name: GNOME Shell top bar (Linux x64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: GNOME Shell and the AppIndicator extension
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends gnome-shell gnome-shell-extension-appindicator dbus-bin python3-pil
+      - name: Build
+        run: |
+          go build -o "$RUNNER_TEMP/bin/agentsemaphore" ./cmd/agentsemaphore
+          go build -o "$RUNNER_TEMP/bin/fakeagent" ./tools/e2e/fakeagent
+      - name: Headless GNOME Shell, a waiting session, the dot in the top bar
+        run: ./tools/e2e/gnome-e2e.sh "$RUNNER_TEMP/bin/agentsemaphore" "$RUNNER_TEMP/bin/fakeagent"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-gnome
+          path: ${{ runner.temp }}/e2e-gnome/*.*
+          if-no-files-found: ignore
+          retention-days: 14
+
   # Windows on Arm runners are free only for public repositories.
   go-windows-arm:
     name: Go tests (windows-11-arm)
