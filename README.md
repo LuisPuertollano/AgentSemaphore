@@ -133,7 +133,7 @@ curl -fsSL https://raw.githubusercontent.com/LuisPuertollano/AgentSemaphore/main
 
 It downloads the newest release for your machine, checks its SHA-256 and installs it in `~/.local/bin`.
 Options, uninstall and the GNOME/macOS notes: [install/unix](install/unix/README.md). Every pull request runs
-end-to-end tests on Linux x64, Linux ARM64 and macOS (Apple silicon), but nobody on the team uses these systems
+end-to-end tests on Linux x64, Linux ARM64 and macOS (Apple silicon and Intel), but nobody on the team uses these systems
 daily yet: if you do, a quick test report is very welcome.
 
 ## Roadmap

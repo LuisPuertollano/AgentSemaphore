@@ -54,7 +54,7 @@ Done:
   installed and checked on Windows, Linux and macOS right after publishing.
 - ✅ PID reuse on Linux: `procStart` (verified format, see FINDINGS) tells a live session from an
   old file whose pid now belongs to a newer process.
-- ✅ Linux and macOS end-to-end tests in CI (x64 and ARM64 Linux, Apple silicon macOS): fake
+- ✅ Linux and macOS end-to-end tests in CI (x64 and ARM64 Linux, Apple silicon and Intel macOS): fake
   sessions through every colour; on Linux the tray's dot, tooltip and menu are read back over
   D-Bus as a panel would see them.
 
