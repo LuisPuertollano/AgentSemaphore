@@ -8,21 +8,24 @@ A report takes about five minutes. "All fine" is a useful report too:
 
 ## What to check now
 
-Newest pre-release: **v0.1.0-alpha.5** (2026-11-18). Already checked on a real machine: Windows 11 ARM64
+Newest pre-release: **v0.1.0-alpha.6** (2026-11-22). Already checked on a real machine: Windows 11 ARM64
 with Claude Desktop and Claude Code. Everything else has been tested in CI only, so it needs you most:
 
 | Where | What we most want to know |
 |---|---|
-| **macOS** (Apple silicon or Intel) | Does the dot appear in the menu bar? Does it turn red while Claude Code waits for you? Is there **no** Dock icon? Intel Macs: does the binary run at all? (never run anywhere yet) |
+| **macOS** (Apple silicon or Intel) | Does the dot appear in the menu bar? Does a **click open its menu** (new in alpha.6)? Does it turn red while Claude Code waits for you? Is there **no** Dock icon? Intel Macs: does the binary run at all? (never run anywhere yet) |
 | **Linux desktops** (GNOME, KDE Plasma, Cinnamon, XFCE, …) | Does the dot appear in the panel, with the right colour, tooltip and menu? |
 | **Copilot CLI, Codex CLI, Gemini CLI** (any system) | After `agentsemaphore hooks install <agent>`: red when the agent asks you something, orange while it works, green when it is done ([docs/AGENTS.md](AGENTS.md)) |
 | **Windows x64** | The same as on ARM64: dot, red on a Claude Desktop notification, left click opens Claude |
 
-Known in v0.1.0-alpha.5, already fixed for the next release:
-- **macOS: a click on the dot runs "Open Claude" instead of showing the menu**, so the menu cannot be
-  opened. You can still check the dot's colour. The fix makes a click show the menu; see
-  [FINDINGS](FINDINGS.md#macos-clicks-and-the-dock-2026-11-18-code-reading-and-ci-no-real-mac).
-- The menu item "Send a test report…" is not in this version yet. Use the link above.
+New in alpha.6:
+- **macOS:** a click on the dot shows its menu; "Open Claude" is in the menu. In alpha.5 a click opened
+  Claude and the menu could not be opened at all
+  ([FINDINGS](FINDINGS.md#macos-clicks-and-the-dock-2026-11-18-code-reading-and-ci-no-real-mac)).
+- **Every system:** the menu has **"Send a test report…"**, which opens the report form with the title
+  (system and architecture) and the version already filled in. The menu also shows the version.
+- **Windows:** the flash option is now called "Flash Claude in the taskbar when it turns red". Claude Desktop
+  also flashes its own button when a reply arrives, so you may see orange with the option off too.
 
 ## 1. Install
 

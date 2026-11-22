@@ -9,7 +9,7 @@
   "tooltip.starting": "शुरू हो रहा है…",
   "menu.noSessions": "कुछ भी आपका इंतज़ार नहीं कर रहा (कोई सक्रिय सत्र नहीं)",
   "menu.openClaude": "Claude खोलें",
-  "menu.flashOnRed": "लाल होने पर टास्कबार में चमकाएँ",
+  "menu.flashOnRed": "लाल होने पर टास्कबार में Claude को चमकाएँ",
   "menu.startWithSystem": "सिस्टम के साथ शुरू करें",
   "menu.language": "भाषा",
   "menu.languageAuto": "सिस्टम के अनुसार",

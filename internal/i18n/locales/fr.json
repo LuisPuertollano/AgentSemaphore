@@ -9,7 +9,7 @@
   "tooltip.starting": "Démarrage…",
   "menu.noSessions": "Rien ne vous attend (aucune session active)",
   "menu.openClaude": "Ouvrir Claude",
-  "menu.flashOnRed": "Faire clignoter la barre des tâches au passage au rouge",
+  "menu.flashOnRed": "Faire clignoter Claude dans la barre des tâches au passage au rouge",
   "menu.startWithSystem": "Lancer au démarrage du système",
   "menu.language": "Langue",
   "menu.languageAuto": "Langue du système",

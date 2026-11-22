@@ -249,3 +249,18 @@ test now fails if it is ever listed as `Foreground`. Not yet seen on a real Mac.
 On macOS a red state is shown by the dot only. There is no taskbar to flash, and bouncing a Dock icon
 would need the Dock icon this app does not have; a notification would bring back the noise the project
 exists to remove.
+
+## Windows: Claude Desktop flashes its own taskbar button (2026-11-22, laptop)
+
+On the Windows 11 ARM64 laptop (Claude Desktop 6.28899.6.0 from the Store), with the window minimized,
+Claude Desktop's taskbar button turns orange when a reply arrives. It does so **also with AgentSemaphore's
+"flash" option switched off**, so Claude Desktop flashes its own button. With the option on, the result
+looks the same, so AgentSemaphore's own flash could not be told apart there.
+
+Checked separately: `FlashWindowEx` (`FLASHW_TRAY | FLASHW_TIMERNOFG`) on the window that
+`Process.MainWindowHandle` reports for the Store app's `Claude.exe` (title "Claude") turns the button
+orange. That is the same call and the same kind of window the tray uses.
+
+So for Claude Desktop chats the option adds little. It still matters for reds that Claude Desktop does
+not flash for itself, for example a Claude Code CLI session waiting in a terminal. Not yet observed on a
+real machine.
