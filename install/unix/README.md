@@ -32,5 +32,5 @@ From a clone of this repo: `bash install/unix/install.sh --autostart`.
   `xattr -d com.apple.quarantine agentsemaphore`.
 - `--autostart` needs a build newer than `v0.1.0-alpha.1`. With that version, use "Start with the
   system" in the menu instead.
-- Tested in CI on Linux x64, Linux ARM64 and macOS (Apple silicon). Not yet on a real desktop:
+- Tested in CI on Linux x64, Linux ARM64 and macOS (Apple silicon and Intel). Not yet on a real desktop:
   reports are welcome.
