@@ -30,6 +30,7 @@
 Especially on **macOS**, **Linux desktops** (GNOME, KDE, …) and with **GitHub Copilot CLI**, **OpenAI Codex CLI**
 or **Gemini CLI**: those are tested only in CI so far. Install it ([below](#install)), use your agents as usual for
 a while, and fill in a short [test report](https://github.com/LuisPuertollano/AgentSemaphore/issues/new?template=test-report.yml).
+What to install, what to look at and what is known for the current release: **[docs/TESTING.md](docs/TESTING.md)**.
 "All fine" is a useful report too. Website: https://luispuertollano.github.io/AgentSemaphore/
 
 <p align="center">

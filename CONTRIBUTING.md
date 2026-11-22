@@ -8,6 +8,7 @@ most useful things you can do.
 - **Try it and report what you see.** Use the [test report](https://github.com/LuisPuertollano/AgentSemaphore/issues/new?template=test-report.yml)
   form: your OS and architecture, the agents and versions, what the tray showed and what the agent was actually
   doing. Reports from macOS, Linux desktops and from Copilot, Codex or Gemini CLI users are the most needed.
+  [docs/TESTING.md](docs/TESTING.md) says what to install and what to look at in the current release.
 - **Share findings.** How an agent stores its live state, which notifications it posts, what changed in a
   new version. `docs/FINDINGS.md` records what has been measured so far; corrections are very welcome.
 - **Add a source for another agent.** Copilot, Codex and Gemini CLI go through `internal/source/hooks`
@@ -38,5 +39,12 @@ CI runs all of this on Linux, Windows and macOS for every pull request.
 
 Maintainers only. Either push a tag `vX.Y.Z` (or `vX.Y.Z-alpha.N` for a pre-release), or run the
 **Release** workflow by hand on `main` (Actions → Release → Run workflow) with the version to create.
-The workflow builds the six binaries, publishes them with `SHA256SUMS.txt`, then installs the new
-release on Windows x64 and ARM64 with `install.ps1 -FromRelease` and checks the version it reports.
+The workflow builds the eight binaries (the Windows ones also as console builds), publishes them with
+`SHA256SUMS.txt` and a Scoop manifest, then installs the new release on Windows x64 and ARM64, Linux x64
+and ARM64 and macOS, and checks the version it reports.
+
+Before a release, in the same pull request as the last change:
+- update **What to check now** in [docs/TESTING.md](docs/TESTING.md): the new version, what changed for
+  testers, and what is known to be broken;
+- after the release, point the Scoop lines in `README.md`, `docs/site/index.html` and `docs/TESTING.md`
+  to the new tag.

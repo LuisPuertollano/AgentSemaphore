@@ -59,5 +59,8 @@ Linux/macOS, (3) more agents (Gemini CLI, Codex, Copilot CLI…), (4) subscripti
 - Worst state wins across sessions: red > grey > orange > green (grey = a source cannot be read).
 - Read-only towards the agents: never modify an agent's own config without the user asking.
   If hooks are needed, install them additively and make uninstall remove only ours.
+- Testers follow `docs/TESTING.md`. When a change alters what a tester installs, sees or should check
+  (above all on macOS and Linux, which Luis cannot test), update its "What to check now" in the same PR,
+  and before each release (see CONTRIBUTING, Releases).
 - Undocumented data sources (session files, notification DB) must fail soft: if the format
   changes, show a clear "unknown" state, never crash and never show a wrong green.

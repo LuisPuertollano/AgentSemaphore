@@ -6,7 +6,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for testing! A short report is fine. Please do not paste anything you consider private:
+        Thank you for testing! A short report is fine. What to check in the current release, and where the
+        version, state and log come from: [docs/TESTING.md](https://github.com/LuisPuertollano/AgentSemaphore/blob/main/docs/TESTING.md).
+        Please do not paste anything you consider private:
         session names and folder names can appear in the outputs below, so edit them out if needed.
   - type: dropdown
     id: os
