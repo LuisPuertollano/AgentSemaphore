@@ -264,3 +264,18 @@ orange. That is the same call and the same kind of window the tray uses.
 So for Claude Desktop chats the option adds little. It still matters for reds that Claude Desktop does
 not flash for itself, for example a Claude Code CLI session waiting in a terminal. Not yet observed on a
 real machine.
+
+## Linux: the dot in a real GNOME top bar, headless in CI (2026-11-22)
+
+`tools/e2e/gnome-e2e.sh` runs GNOME Shell 50.1 (Ubuntu 26.04 runner) with
+`--headless --wayland --virtual-monitor 1280x800` and Ubuntu's AppIndicator extension, under a private
+session bus with keyfile GSettings. Measured: the extension's `org.kde.StatusNotifierWatcher` lists the
+tray, `Main.panel.statusArea` gets a visible, mapped `appindicator-…` button, and a screenshot of the top
+bar shows the dot in its red (112 pixels of it).
+
+- `Eval` and `org.gnome.Shell.Screenshot` are refused unless GNOME is in "unsafe mode". A test-only
+  extension in the scratch HOME sets `global.context.unsafe_mode = true`. GNOME then shows a padlock
+  in the top bar and a notification saying so; neither exists on a normal desktop.
+- GNOME Shell needs the system bus with logind. It aborts at start-up in a container without them
+  (seen in the development container: "Error calling StartServiceByName for org.freedesktop.login1").
+  GitHub's Ubuntu runners have both.

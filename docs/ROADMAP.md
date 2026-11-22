@@ -66,9 +66,10 @@ Done:
   Not yet tried on a real Mac.
 
 Next:
-- Linux: check the tray on real desktops. GNOME shows tray icons only with the AppIndicator
-  extension (Ubuntu enables it by default); other desktops are untested so far. In CI where
-  possible, otherwise by user reports.
+- ✅ GNOME in CI: GNOME Shell 50 runs headless with Ubuntu's AppIndicator extension; the dot is
+  checked in the real top bar (registered, visible, red in a screenshot). See FINDINGS.
+- Linux: other desktops (KDE Plasma, Cinnamon, XFCE as a full session…) and real GNOME sessions. In CI
+  where possible, otherwise by user reports.
 
 ## Phase 3 — More agents 🚧
 - ✅ One generic hook source (`internal/source/hooks`): the agent runs
