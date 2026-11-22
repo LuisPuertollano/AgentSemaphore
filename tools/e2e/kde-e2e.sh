@@ -37,6 +37,9 @@ fi
 
 # --- inside the private session bus --------------------------------------------------
 export XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6
+# KDE's menu is plasma-applications.menu; without the prefix KService finds no
+# .desktop files, and KWin then cannot tell that Spectacle may take screenshots.
+export XDG_MENU_PREFIX=plasma-
 mkdir -p "$HOME/.claude/sessions"
 cp "$FAKE" "$OUT/fake/claude"
 
@@ -45,7 +48,7 @@ cleanup() { kill "${PIDS[@]}" 2>/dev/null || true; }
 trap cleanup EXIT
 show_logs() {
   local f
-  for f in kwin kded plasmashell spectacle; do
+  for f in kwin kded plasmashell spectacle kbuildsycoca; do
     [ -f "$OUT/$f.log" ] && { echo "--- $f log (last 40 lines)"; tail -40 "$OUT/$f.log"; }
   done
   echo "--- tray output"; cat "$OUT/tray.out" 2>/dev/null || true
@@ -61,10 +64,20 @@ wait_for() { # command, description, timeout seconds
 has_owner() { gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus \
   --method org.freedesktop.DBus.NameHasOwner "$1" | grep -q true; }
 
-kwin_wayland --virtual --width 1280 --height 800 --no-lockscreen --socket wayland-agsem > "$OUT/kwin.log" 2>&1 &
+# The two KWIN_* variables switch KWin's checks of which programs may take
+# screenshots off, for this test's KWin only (they are a fallback in case the
+# .desktop lookup above still fails on the runner).
+KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 \
+  kwin_wayland --virtual --width 1280 --height 800 --no-lockscreen --socket wayland-agsem > "$OUT/kwin.log" 2>&1 &
 PIDS+=($!)
 wait_for '[ -S "$XDG_RUNTIME_DIR/wayland-agsem" ]' 'KWin runs on a virtual screen' 60
 export WAYLAND_DISPLAY=wayland-agsem QT_QPA_PLATFORM=wayland
+# Programs that D-Bus starts on demand (kactivitymanagerd, which plasmashell
+# needs) must find the virtual screen too, not try X11.
+gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus \
+  --method org.freedesktop.DBus.UpdateActivationEnvironment \
+  "{'WAYLAND_DISPLAY': '$WAYLAND_DISPLAY', 'QT_QPA_PLATFORM': 'wayland', 'XDG_SESSION_TYPE': 'wayland', 'XDG_CURRENT_DESKTOP': 'KDE', 'KDE_FULL_SESSION': 'true', 'KDE_SESSION_VERSION': '6', 'XDG_MENU_PREFIX': 'plasma-', 'XDG_RUNTIME_DIR': '$XDG_RUNTIME_DIR', 'HOME': '$HOME'}" >/dev/null
+command -v kbuildsycoca6 >/dev/null && kbuildsycoca6 > "$OUT/kbuildsycoca.log" 2>&1 || true
 
 KDED=$(command -v kded6 || command -v kded5 || ls /usr/lib/*/libexec/kf6/kded6 2>/dev/null | head -1 || true)
 [ -n "$KDED" ] || fail 'kded is installed'
@@ -78,7 +91,14 @@ wait_for 'has_owner org.kde.StatusNotifierWatcher' "Plasma's StatusNotifierWatch
 
 plasmashell --no-respawn > "$OUT/plasmashell.log" 2>&1 &
 PIDS+=($!)
+PLASMA=$!
 wait_for 'has_owner org.kde.plasmashell' 'plasmashell runs' 60
+plasma_script() { gdbus call --session --dest org.kde.plasmashell --object-path /PlasmaShell \
+  --method org.kde.PlasmaShell.evaluateScript "$1"; }
+tray_in_panel='print(panels().filter(p => p.widgets("org.kde.plasma.systemtray").length > 0).length)'
+wait_for "kill -0 $PLASMA && plasma_script '$tray_in_panel' | grep -q \"'[1-9]\"" 'Plasma has a panel with the system tray' 60
+plasma_script 'print(panels().map(p => p.location + ":" + p.widgets().map(w => w.type).join(",")).join(" | "))' \
+  | tee "$OUT/panels.txt"
 
 shot() { # file: full-screen screenshot with Spectacle (KWin allows its screenshot interface to Spectacle)
   rm -f "$1"
@@ -87,15 +107,14 @@ shot() { # file: full-screen screenshot with Spectacle (KWin allows its screensh
   for _ in $(seq 20); do [ -s "$1" ] && return 0; sleep 0.5; done
   show_logs; fail "screenshot with Spectacle ($1)"
 }
-panel_reds() { # file: pixels in the dot's red in the bottom 80 px (the default panel), also saved as *-panel.png
+panel_reds() { # file: pixels in the dot's red on the screen; the bottom 80 px (default panel) saved as *-panel.png
   python3 - "$1" <<'PY'
 import sys
 from PIL import Image
 im = Image.open(sys.argv[1]).convert("RGB")
 w, h = im.size
-panel = im.crop((0, h - 80, w, h))
-panel.save(sys.argv[1].replace(".png", "-panel.png"))
-px = panel.tobytes()
+im.crop((0, h - 80, w, h)).save(sys.argv[1].replace(".png", "-panel.png"))  # for review
+px = im.tobytes()  # count the whole screen: the before/after difference cancels the wallpaper
 print(sum(1 for i in range(0, len(px), 3)
           if abs(px[i] - 220) < 30 and abs(px[i + 1] - 38) < 30 and abs(px[i + 2] - 38) < 30))
 PY
