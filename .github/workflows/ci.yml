@@ -186,7 +186,7 @@ jobs:
       - name: KWin, plasmashell and Spectacle
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q --no-install-recommends kwin-wayland plasma-desktop plasma-workspace spectacle dbus-bin python3-pil
+          sudo apt-get install -y -q --no-install-recommends kwin-wayland plasma-desktop plasma-workspace kde-spectacle dbus-bin python3-pil
       - name: Build
         run: |
           go build -o "$RUNNER_TEMP/bin/agentsemaphore" ./cmd/agentsemaphore

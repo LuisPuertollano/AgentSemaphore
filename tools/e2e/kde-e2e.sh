@@ -9,7 +9,7 @@
 #  - a screenshot taken with Spectacle shows the dot's red (saved for review).
 # Everything lives in a scratch HOME; nothing of the real user is read.
 #
-# Needs: kwin-wayland, plasma-desktop, spectacle, dbus-run-session, python3
+# Needs: kwin-wayland, plasma-desktop, kde-spectacle, dbus-run-session, python3
 # with Pillow.
 #
 # usage: kde-e2e.sh <agentsemaphore binary> <fakeagent binary>
