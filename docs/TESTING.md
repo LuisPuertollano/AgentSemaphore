@@ -49,7 +49,7 @@ pwsh -File AgentSemaphore/install/windows/install.ps1 -FromRelease -Autostart
 ```
 
 Or with [Scoop](https://scoop.sh), using the newest release tag:
-`scoop install https://github.com/LuisPuertollano/AgentSemaphore/releases/download/v0.1.0-alpha.5/agentsemaphore.json`.
+`scoop install https://github.com/LuisPuertollano/AgentSemaphore/releases/download/v0.1.0-alpha.6/agentsemaphore.json`.
 Details: [install/windows](../install/windows/README.md).
 
 ### macOS notes
