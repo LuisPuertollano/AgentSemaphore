@@ -39,7 +39,9 @@ getting spammed by notifications.
 `prototype/windows/` is a **working** Windows prototype (PowerShell + a small Python helper),
 installed and verified on Luis's laptop on 2026-11-14. The cross-platform Go core (`cmd/`, `internal/`)
 reads Claude Code sessions and Claude Desktop notifications; its tray ran on the Windows ARM64 laptop on
-2026-11-14 (dot, tooltip, menu and Quit fine; real notification DB read). Linux (x64, ARM64) and macOS are tested end-to-end in CI only;
+2026-11-14 (dot, tooltip, menu and Quit fine; real notification DB read). With v0.1.0-alpha.5 (installed
+`-FromRelease`, 2026-11-22) a real Claude Desktop toast turned the dot red and a left click opened Claude;
+the taskbar flash on red is not yet confirmed on the laptop. Linux (x64, ARM64) and macOS are tested end-to-end in CI only;
 Luis has no Linux or macOS machine and does not use Copilot or Codex CLI, so never ask him to test those;
 real-world reports come from testers (issue form `.github/ISSUE_TEMPLATE/test-report.yml`). Read `docs/FINDINGS.md` before changing
 any detection logic — it records what was measured and what is known to be broken upstream.

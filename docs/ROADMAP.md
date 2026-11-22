@@ -24,8 +24,10 @@ This file keeps the overview; the issues hold the details and progress.
   (tray and console build), Linux x64/ARM64, macOS Intel/Apple silicon, `SHA256SUMS.txt` and a Scoop
   manifest. Install scripts for Windows (`install/windows`) and Linux/macOS (`install/unix`). Every
   release is installed and checked by CI right after publishing.
-- Real-machine testing so far: Windows 11 ARM64 only. Linux and macOS are tested in CI only
-  (no maintainer machine), so reports from users of those systems are very welcome.
+- Real-machine testing so far: Windows 11 ARM64 only. On 2026-11-22, v0.1.0-alpha.5 installed from the
+  release: a real Claude Desktop notification turned the dot red, and a left click opened Claude. The
+  taskbar flash on red is not confirmed yet. Linux and macOS are tested in CI only (no maintainer
+  machine), so reports from users of those systems are very welcome.
 
 ## Phase 0 — Windows prototype ✅ (2026-11-14)
 - Tray dot red/orange/green, tooltip and menu with per-session state.
