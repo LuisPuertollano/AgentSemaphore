@@ -279,3 +279,24 @@ bar shows the dot in its red (112 pixels of it).
 - GNOME Shell needs the system bus with logind. It aborts at start-up in a container without them
   (seen in the development container: "Error calling StartServiceByName for org.freedesktop.login1").
   GitHub's Ubuntu runners have both.
+
+## Linux: the dot in a real KDE Plasma panel, in CI (2026-11-25)
+
+`tools/e2e/kde-e2e.sh` runs a Plasma 6.6 X11 session on Xvfb (Ubuntu 26.04 runner): `kwin_x11`, kded
+with its `statusnotifierwatcher` module and `plasmashell`, whose default panel (bottom) holds
+`org.kde.plasma.systemtray`. Measured: Plasma's watcher lists the tray, and a screenshot of the display
+went from 0 to 208 pixels in the dot's red once the tray started. The screenshot shows the dot in the
+system tray next to the clock.
+
+What it took, for whoever touches this next:
+- `XDG_MENU_PREFIX=plasma-`: KDE's menu file is `plasma-applications.menu`; without the prefix KService
+  finds no `.desktop` files ("applications.menu not found").
+- D-Bus starts `kactivitymanagerd` on demand, with the bus's own environment. Without
+  `UpdateActivationEnvironment` (display variables) it tried the wrong display and died, and
+  plasmashell aborted: "The activity manager daemon (kactivitymanagerd) is not running".
+- **Plasma on Wayland was tried first and dropped.** On the runner there is no GPU (`/dev/dri`), EGL
+  fails ("failed to create dri2 screen"), KWin 6.6 renders in software, and its screenshot interface
+  `org.kde.KWin.ScreenShot2` answers "Screenshot got cancelled" (Spectacle, which uses it, hung instead).
+  It also refuses unknown callers ("NoAuthorized") unless `KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1`.
+  KWin 5.27 in a container did return screenshots that way. The panel, the system tray and the
+  StatusNotifierItem protocol are the same on X11 and Wayland, so the X11 session tests what matters.
