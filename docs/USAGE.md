@@ -1,13 +1,13 @@
 # Phase 4 — subscription usage: findings and proposed design
 
-Status: **Claude Code part implemented (2026-11-18)**, opt-in. The maintainer agreed: install only on
+Status: **Claude Code part implemented (2026-11-18; "limit reached" 2026-11-25)**, opt-in. The maintainer agreed: install only on
 request, exact restore, usage shown in the menu only, Copilot later. Researched from official
 documentation only.
 
 ```sh
 agentsemaphore usage install claude     # Windows: agentsemaphore-cli usage install claude
 agentsemaphore usage status claude
-agentsemaphore usage uninstall claude   # restores your previous status line exactly
+agentsemaphore usage uninstall claude   # restores your previous status line exactly, removes only our hooks
 ```
 
 ## Ground rules
@@ -55,8 +55,18 @@ as internal.
 3. **Menu.** A "Usage" group appears only when there is data, for example:
    `Claude: 5 h 23 % (resets 14:00) · week 41 % (resets Mon 09:00)`.
    - Data older than its reset time is shown as "unknown (no session since …)", never as 0 %.
-4. **Not yet:** a "limit reached" note from the hooks `StopFailure: rate_limit` (it needs Claude Code
-   hooks, which AgentSemaphore does not install today).
+4. **"Limit reached" (implemented 2026-11-25).** `usage install claude` also appends two matcher groups to
+   `hooks` in the same settings file, next to the user's own: `StopFailure` with matcher `rate_limit`, and
+   `Notification` with matcher `quota_auto_resume_fired|quota_auto_resume_stale` (the wait for the limit ended
+   because it reset). Both run `<exe> usage-event claude` in exec form (`command` + `args`, no shell; Claude Code
+   2.1.139 or later; the notifications need 2.1.234). On Windows `<exe>` is the console build.
+   - The menu then shows "Claude: ⚠ limit reached at HH:MM", with "resets in …" when the last status line
+     report had a full window. It goes when Claude Code reports the reset, when the status line reports again
+     (Claude Code answered, so the limit is over), or after a week.
+   - Uninstall removes exactly our two groups, and the `hooks` key or event lists only if we created them.
+   - **Not verified with a real limit:** the hooks documentation names `rate_limit` and shows
+     "API Error: Rate limit reached", but does not say in so many words that "You've hit your session limit"
+     arrives as `StopFailure` `rate_limit`. Reports welcome.
 5. **No extra setting.** Nothing shows until `usage install claude` has been run and Claude Code has
    reported usage.
 6. **Tests.**
@@ -66,6 +76,7 @@ as internal.
 ## Decisions (2026-11-18)
 
 1. `usage install claude` may edit `~/.claude/settings.json` (only `statusLine`, opt-in, exact restore).
+   On 2026-11-25 the maintainer also approved the two "limit reached" hooks (additive; uninstall removes only ours).
 2. Usage stays in the menu. It never changes the dot.
 3. Copilot's OpenTelemetry file export: later, if someone asks.
 

@@ -74,6 +74,28 @@ func runShell(cmdline string, stdin []byte) ([]byte, error) {
 	return c.Output()
 }
 
+// runUsageEvent is what Claude Code's StopFailure and Notification hooks run
+// once "usage install claude" was done (exec form: "<exe> usage-event claude").
+// It records or clears "usage limit reached". It never prints and always
+// exits 0, so it can never get in Claude Code's way.
+func runUsageEvent() (code int) {
+	defer func() {
+		if r := recover(); r != nil {
+			hookLog("usage-event panic: %v", r)
+		}
+		code = 0
+	}()
+	data, _ := io.ReadAll(io.LimitReader(os.Stdin, 1<<20))
+	dir, err := usage.Dir()
+	if err == nil {
+		err = usage.HandleLimitEvent(dir, data, time.Now())
+	}
+	if err != nil {
+		hookLog("usage-event: %v", err)
+	}
+	return 0
+}
+
 // runUsage: agentsemaphore usage install|uninstall|status claude
 func runUsage(args []string) int {
 	if len(args) != 2 || args[1] != "claude" {
@@ -104,20 +126,35 @@ func runUsage(args []string) int {
 			fmt.Fprintln(os.Stderr, err)
 			return 1
 		}
+		if _, err := usage.InstallClaudeLimitHooks(dir, hookExe(exe), home); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			usage.UninstallClaude(dir, home) // all or nothing
+			return 1
+		}
 		fmt.Println("Claude Code's status line now goes through AgentSemaphore:", path)
-		fmt.Println("Your own status line, if you had one, is still shown. Undo: agentsemaphore usage uninstall claude")
+		fmt.Println("Your own status line, if you had one, is still shown.")
+		fmt.Println(`Two hooks were added next to yours (StopFailure "rate_limit", Notification "quota_auto_resume_*"): they show "limit reached" in the menu.`)
 		fmt.Println("Plan usage appears in the menu after the next Claude Code reply (Pro, Max and Ultra plans).")
+		fmt.Println("Undo all of it: agentsemaphore usage uninstall claude")
 	case "uninstall":
 		path, what, err := usage.UninstallClaude(dir, home)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 1
 		}
-		fmt.Printf("%s: %s\n", path, what)
+		if _, err := usage.UninstallClaudeLimitHooks(dir, home); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+		fmt.Printf("%s: status line %s; our limit hooks removed (yours untouched)\n", path, what)
 	case "status":
-		if usage.ClaudeInstalled(home) {
+		line, hooks := usage.ClaudeInstalled(home), usage.ClaudeLimitHooksInstalled(home)
+		switch {
+		case line && hooks:
 			fmt.Println("installed")
-		} else {
+		case line || hooks:
+			fmt.Printf("partly installed (status line: %v, limit hooks: %v); run usage install claude again\n", line, hooks)
+		default:
 			fmt.Println("not installed")
 		}
 	default:

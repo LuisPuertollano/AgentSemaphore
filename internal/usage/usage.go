@@ -109,14 +109,33 @@ func Load(dir string) (Claude, bool) {
 	return c, c.FiveHour != nil || c.SevenDay != nil
 }
 
-// MenuLines is the "Plan usage" group: a title and one line, or nothing when
-// no usage was ever recorded. A window whose reset time has passed is not
-// shown as a number: no session has reported since, so it is unknown.
+// MenuLines is the "Plan usage" group: a title, the usage line and, while a
+// usage limit holds, a "limit reached" line; nothing when there is neither.
+// A window whose reset time has passed is not shown as a number: no session
+// has reported since, so it is unknown.
 func MenuLines(dir, lang string, now time.Time) []string {
 	c, ok := Load(dir)
-	if !ok {
+	limit, limited := activeLimit(dir, c, ok, now)
+	if !ok && !limited {
 		return nil
 	}
+	lines := []string{i18n.T(lang, "usage.title")}
+	if ok {
+		lines = append(lines, "    Claude: "+windowsLine(c, lang, now))
+	}
+	if limited {
+		note := i18n.T(lang, "usage.limit", "since", limit.Since.Local().Format("15:04"))
+		if reset, known := limitReset(c, now); known {
+			note = i18n.T(lang, "usage.limitResets", "since", limit.Since.Local().Format("15:04"), "in", Until(reset.Sub(now)))
+		}
+		lines = append(lines, "    Claude: ⚠ "+note)
+	}
+	return lines
+}
+
+// windowsLine is "5 h 23 % (resets in …) · week 41 % (…)", or "unknown" when
+// every window has reset since the last report.
+func windowsLine(c Claude, lang string, now time.Time) string {
 	var parts []string
 	for _, w := range []struct {
 		win *Window
@@ -133,16 +152,14 @@ func MenuLines(dir, lang string, now time.Time) []string {
 			"pct", fmt.Sprintf("%.0f", w.win.UsedPercentage),
 			"in", Until(reset.Sub(now))))
 	}
-	line := ""
 	if len(parts) == 0 {
-		line = i18n.T(lang, "usage.stale")
-	} else {
-		line = parts[0]
-		for _, p := range parts[1:] {
-			line += " · " + p
-		}
+		return i18n.T(lang, "usage.stale")
 	}
-	return []string{i18n.T(lang, "usage.title"), "    Claude: " + line}
+	line := parts[0]
+	for _, p := range parts[1:] {
+		line += " · " + p
+	}
+	return line
 }
 
 // Until formats a duration for "resets in …": minutes, hours and minutes, or days.
