@@ -102,8 +102,10 @@ Next:
 - ✅ Repo public, MIT, README with visuals, contributing guide, pre-releases.
 - ✅ Website (GitHub Pages), real screenshots (Linux, XFCE; `tools/screenshots/linux.sh`), test-report form.
 - ✅ Scoop manifest with every release (Windows), installed and checked in CI.
-- Next: Windows/macOS screenshots from testers; Windows code signing (free for open source through
-  SignPath Foundation; to be decided).
+- Next: Windows/macOS screenshots from testers.
+- Parked (2026-11-25): Windows code signing. Free for open source through SignPath Foundation (certificate
+  issued to the foundation, MFA for the team, a code signing policy page, each signing approved by hand).
+  To be taken up again later.
 - Not planned (decided 2026-11-25): Homebrew and winget. Each needs a package kept in step with every
   release outside this repository; the install scripts and Scoop cover macOS and Windows.
 - Everything free; no telemetry.

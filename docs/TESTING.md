@@ -8,7 +8,7 @@ A report takes about five minutes. "All fine" is a useful report too:
 
 ## What to check now
 
-Newest pre-release: **v0.1.0-alpha.6** (2026-11-22). Already checked on a real machine: Windows 11 ARM64
+Newest pre-release: **v0.1.0-alpha.7** (2026-11-25). Already checked on a real machine: Windows 11 ARM64
 with Claude Desktop and Claude Code. Everything else has been tested in CI only, so it needs you most:
 
 | Where | What we most want to know |
@@ -17,7 +17,15 @@ with Claude Desktop and Claude Code. Everything else has been tested in CI only,
 | **Linux desktops** (GNOME, KDE Plasma, Cinnamon, XFCE, …) | Does the dot appear in the panel, with the right colour, tooltip and menu? GNOME 50 with the AppIndicator extension and KDE Plasma 6.6 (X11 session) are checked in CI on virtual displays (Ubuntu 26.04): reports from real sessions, Plasma on Wayland, other versions and other desktops are what we lack |
 | **Copilot CLI, Codex CLI, Gemini CLI** (any system) | After `agentsemaphore hooks install <agent>`: red when the agent asks you something, orange while it works, green when it is done ([docs/AGENTS.md](AGENTS.md)) |
 | **Windows x64** | The same as on ARM64: dot, red on a Claude Desktop notification, left click opens Claude |
-| **Claude Code plan usage** (any system; next release) | After `agentsemaphore usage install claude`: does the menu show your 5-hour and weekly usage? If you hit a usage limit, does it say "limit reached", and does that go once the limit resets? ([docs/USAGE.md](USAGE.md)) |
+| **Claude Code plan usage** (any system; "limit reached" new in alpha.7) | After `agentsemaphore usage install claude`: does the menu show your 5-hour and weekly usage? If you hit a usage limit, does it say "limit reached", and does that go once the limit resets? ([docs/USAGE.md](USAGE.md)) |
+
+New in alpha.7:
+- **Every system, Claude Code plan usage:** `agentsemaphore usage install claude` now also adds two Claude Code
+  hooks next to yours, and the menu says "⚠ limit reached at HH:MM" while a usage limit stops Claude Code
+  (with "resets in …" when known). It never changes the dot; `usage uninstall claude` removes only our
+  hooks. Not yet seen with a real usage limit: if you hit one, please tell us whether the line appeared.
+- Behind the scenes: CI now also checks the dot in a real GNOME 50 top bar and a KDE Plasma 6.6 panel,
+  the menu-bar click on macOS (Apple silicon and Intel), and runs everything on an Intel Mac.
 
 New in alpha.6:
 - **macOS:** a click on the dot shows its menu; "Open Claude" is in the menu. In alpha.5 a click opened
