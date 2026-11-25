@@ -28,5 +28,7 @@
   "usage.title": "Uso del plan",
   "usage.window5h": "5 h {pct} % (se reinicia en {in})",
   "usage.window7d": "semana {pct} % (se reinicia en {in})",
-  "usage.stale": "desconocido: ninguna respuesta de Claude Code desde el último reinicio"
+  "usage.stale": "desconocido: ninguna respuesta de Claude Code desde el último reinicio",
+  "usage.limit": "límite alcanzado a las {since}",
+  "usage.limitResets": "límite alcanzado a las {since} · se reinicia en {in}"
 }

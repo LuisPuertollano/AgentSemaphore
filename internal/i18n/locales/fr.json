@@ -28,5 +28,7 @@
   "usage.title": "Utilisation du forfait",
   "usage.window5h": "5 h {pct} % (remise à zéro dans {in})",
   "usage.window7d": "semaine {pct} % (remise à zéro dans {in})",
-  "usage.stale": "inconnu : aucune réponse de Claude Code depuis la dernière remise à zéro"
+  "usage.stale": "inconnu : aucune réponse de Claude Code depuis la dernière remise à zéro",
+  "usage.limit": "limite atteinte à {since}",
+  "usage.limitResets": "limite atteinte à {since} · réinitialisée dans {in}"
 }

@@ -87,8 +87,9 @@ The worst state across all sessions wins. Hover for a summary, click for the lis
 | Other agents | ⏳ planned, ideas welcome | [Phase 3](https://github.com/LuisPuertollano/AgentSemaphore/issues/4) |
 
 **Optional: your Claude plan usage in the menu** (5-hour and weekly windows, from Claude Code's own status line):
-`agentsemaphore usage install claude`. Your own status line keeps showing, and `usage uninstall claude` puts
-everything back. It never changes the dot. Details: [docs/USAGE.md](docs/USAGE.md).
+`agentsemaphore usage install claude`. It also adds two Claude Code hooks next to yours, so the menu says
+"limit reached" when a usage limit stops Claude Code. Your own status line and hooks keep working, and
+`usage uninstall claude` puts everything back. It never changes the dot. Details: [docs/USAGE.md](docs/USAGE.md).
 
 Everything measured so far, including what is broken upstream, is in [docs/FINDINGS.md](docs/FINDINGS.md).
 

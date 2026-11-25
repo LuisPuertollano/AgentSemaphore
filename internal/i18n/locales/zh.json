@@ -28,5 +28,7 @@
   "usage.title": "套餐用量",
   "usage.window5h": "5 小时 {pct}%（{in}后重置）",
   "usage.window7d": "本周 {pct}%（{in}后重置）",
-  "usage.stale": "未知：上次重置后 Claude Code 没有回复"
+  "usage.stale": "未知：上次重置后 Claude Code 没有回复",
+  "usage.limit": "{since} 达到用量上限",
+  "usage.limitResets": "{since} 达到用量上限 · {in}后重置"
 }

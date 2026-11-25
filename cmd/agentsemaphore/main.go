@@ -11,7 +11,8 @@
 //	agentsemaphore hook <agent> <event>
 //	                          what those hooks run (event JSON on stdin); always exits 0
 //	agentsemaphore usage install|uninstall|status claude
-//	                          show Claude plan usage in the menu, via Claude Code's status line
+//	                          show Claude plan usage in the menu, via Claude Code's status line,
+//	                          and "limit reached" via two Claude Code hooks
 //	agentsemaphore statusline what that status line runs (status JSON on stdin); always exits 0
 package main
 
@@ -52,6 +53,8 @@ func main() {
 			os.Exit(runStatusline())
 		case "usage":
 			os.Exit(runUsage(os.Args[2:]))
+		case usage.LimitEventArg:
+			os.Exit(runUsageEvent())
 		}
 	}
 	once := flag.Bool("once", false, "read all sources once, print JSON and exit")

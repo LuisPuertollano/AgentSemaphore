@@ -143,9 +143,18 @@ try {
     Check ($line -match 'MY-LINE') "your own status line is still shown (got '$line')"
     $m = Menu
     Check ($m -match 'Plan usage' -and $m -match '5 h 24 %.*week 41 %') 'menu shows the plan usage'
+    # Our limit hooks, run the way Claude Code does (exec form: command + args, event JSON on stdin).
+    $cfg = Get-Content $claudeSettings -Raw | ConvertFrom-Json
+    $stopHook = @($cfg.hooks.StopFailure | ForEach-Object { $_.hooks[0] } | Where-Object { $_.args -and $_.args[0] -eq 'usage-event' })
+    Check ($stopHook.Count -eq 1) 'usage install claude adds our StopFailure hook (exec form)'
+    $out = '{"hook_event_name":"StopFailure","error":"rate_limit"}' | & $stopHook[0].command @($stopHook[0].args)
+    Check ($LASTEXITCODE -eq 0 -and -not $out) 'the StopFailure hook prints nothing and exits 0'
+    Check ((Menu) -match 'limit reached at') 'menu shows "limit reached" after a StopFailure rate_limit hook'
+    '{"hook_event_name":"Notification","notification_type":"quota_auto_resume_fired"}' | & $stopHook[0].command @($stopHook[0].args) | Out-Null
+    Check (-not ((Menu) -match 'limit reached')) '"limit reached" goes when Claude Code reports the reset'
     & $Exe usage uninstall claude | Out-Null
     $restored = Get-Content $claudeSettings -Raw | ConvertFrom-Json
-    Check ($restored.statusLine.command -eq 'echo MY-LINE' -and $restored.statusLine.padding -eq 1 -and $restored.model -eq 'opus') 'usage uninstall restores the status line exactly'
+    Check ($restored.statusLine.command -eq 'echo MY-LINE' -and $restored.statusLine.padding -eq 1 -and $restored.model -eq 'opus' -and -not ($restored.PSObject.Properties.Name -contains 'hooks')) 'usage uninstall restores the status line and removes our hooks exactly'
   } finally {
     if ($hadSettings) { Set-Content $claudeSettings $savedSettings -NoNewline } else { Remove-Item $claudeSettings -ErrorAction SilentlyContinue }
   }

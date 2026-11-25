@@ -28,5 +28,7 @@
   "usage.title": "Plannutzung",
   "usage.window5h": "5 Std. {pct} % (zurückgesetzt in {in})",
   "usage.window7d": "Woche {pct} % (zurückgesetzt in {in})",
-  "usage.stale": "unbekannt: keine Claude-Code-Antwort seit dem letzten Zurücksetzen"
+  "usage.stale": "unbekannt: keine Claude-Code-Antwort seit dem letzten Zurücksetzen",
+  "usage.limit": "Limit erreicht um {since}",
+  "usage.limitResets": "Limit erreicht um {since} · zurückgesetzt in {in}"
 }

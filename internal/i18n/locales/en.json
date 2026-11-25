@@ -28,5 +28,7 @@
   "usage.title": "Plan usage",
   "usage.window5h": "5 h {pct} % (resets in {in})",
   "usage.window7d": "week {pct} % (resets in {in})",
-  "usage.stale": "unknown: no Claude Code reply since the last reset"
+  "usage.stale": "unknown: no Claude Code reply since the last reset",
+  "usage.limit": "limit reached at {since}",
+  "usage.limitResets": "limit reached at {since} · resets in {in}"
 }

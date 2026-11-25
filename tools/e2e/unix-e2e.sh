@@ -185,10 +185,34 @@ menu | grep -q 'Plan usage' && menu | grep -q '5 h 24 %.*week 41 %' || { once; f
 ok 'menu shows the plan usage (5 h 24 %, week 41 %)'
 [ "$(state)" = green ] || fail 'usage never changes the dot'
 ok 'usage never changes the dot'
+[ "$("$EXE" usage status claude)" = installed ] || fail 'usage status claude: installed (status line and limit hooks)'
+ok 'usage status claude: installed (status line and limit hooks)'
+# Run our limit hooks the way Claude Code does (exec form: command + args, event JSON on stdin).
+claude_hook() { # event, JSON
+  python3 - "$HOME/.claude/settings.json" "$1" "$2" <<'PY'
+import json, subprocess, sys
+settings, event, payload = sys.argv[1:]
+groups = json.load(open(settings))["hooks"][event]
+ours = [g["hooks"][0] for g in groups if g["hooks"][0].get("args", [None])[0] == "usage-event"]
+assert len(ours) == 1, groups
+r = subprocess.run([ours[0]["command"]] + ours[0]["args"], input=payload.encode(), capture_output=True, timeout=10)
+sys.exit(0 if r.returncode == 0 and not r.stdout else 1)
+PY
+}
+claude_hook StopFailure '{"hook_event_name":"StopFailure","error":"rate_limit","last_assistant_message":"API Error: Rate limit reached"}' \
+  || fail 'the StopFailure hook runs in exec form, prints nothing, exits 0'
+menu | grep -q 'limit reached at' || { once; fail 'menu shows "limit reached" after a StopFailure rate_limit'; }
+ok 'menu shows "limit reached" after a StopFailure rate_limit hook'
+[ "$(state)" = green ] || fail 'the usage limit never changes the dot'
+ok 'the usage limit never changes the dot'
+claude_hook Notification '{"hook_event_name":"Notification","notification_type":"quota_auto_resume_fired"}' \
+  || fail 'the Notification hook runs'
+menu | grep -q 'limit reached' && { once; fail '"limit reached" goes when the limit resets'; }
+ok '"limit reached" goes when Claude Code reports the reset (quota_auto_resume_fired)'
 "$EXE" usage uninstall claude >/dev/null || fail 'usage uninstall claude'
-python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d['statusLine']=={'type':'command','command':'echo MY-LINE','padding':1} and d['model']=='opus' else 1)" "$HOME/.claude/settings.json" \
-  || { cat "$HOME/.claude/settings.json"; fail 'usage uninstall restores the status line exactly'; }
-ok 'usage uninstall restores the status line exactly'
+python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d['statusLine']=={'type':'command','command':'echo MY-LINE','padding':1} and d['model']=='opus' and 'hooks' not in d else 1)" "$HOME/.claude/settings.json" \
+  || { cat "$HOME/.claude/settings.json"; fail 'usage uninstall restores the status line and removes our hooks exactly'; }
+ok 'usage uninstall restores the status line and removes our hooks exactly'
 
 # --- tray: single instance --------------------------------------------------------------
 write_session "$P0" e2e-wait waiting 'permission prompt'

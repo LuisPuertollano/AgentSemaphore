@@ -28,5 +28,7 @@
   "usage.title": "प्लान उपयोग",
   "usage.window5h": "5 घंटे {pct}% ({in} में रीसेट)",
   "usage.window7d": "सप्ताह {pct}% ({in} में रीसेट)",
-  "usage.stale": "अज्ञात: पिछले रीसेट के बाद Claude Code का कोई उत्तर नहीं"
+  "usage.stale": "अज्ञात: पिछले रीसेट के बाद Claude Code का कोई उत्तर नहीं",
+  "usage.limit": "{since} पर सीमा पूरी हुई",
+  "usage.limitResets": "{since} पर सीमा पूरी हुई · {in} में रीसेट"
 }

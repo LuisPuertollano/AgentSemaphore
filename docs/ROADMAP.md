@@ -93,7 +93,10 @@ Next:
 - ✅ Claude Code: `agentsemaphore usage install claude` (opt-in; your own status line is still shown;
   exact restore). A "Plan usage" menu group; it never changes the dot. Tested end-to-end on Linux,
   macOS and Windows.
-- Later: "limit reached" from Claude Code hooks; Copilot (OpenTelemetry file export) if requested.
+- ✅ "Limit reached" in the menu from two Claude Code hooks (`StopFailure` `rate_limit`,
+  `quota_auto_resume_*`), installed with the status line, additive, removed exactly. Not yet seen with a
+  real usage limit.
+- Later: Copilot (OpenTelemetry file export) if requested.
 
 ## Phase 5 — Public release
 - ✅ Repo public, MIT, README with visuals, contributing guide, pre-releases.

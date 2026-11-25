@@ -28,5 +28,7 @@
   "usage.title": "Utilizzo del piano",
   "usage.window5h": "5 h {pct} % (azzeramento tra {in})",
   "usage.window7d": "settimana {pct} % (azzeramento tra {in})",
-  "usage.stale": "sconosciuto: nessuna risposta di Claude Code dall'ultimo azzeramento"
+  "usage.stale": "sconosciuto: nessuna risposta di Claude Code dall'ultimo azzeramento",
+  "usage.limit": "limite raggiunto alle {since}",
+  "usage.limitResets": "limite raggiunto alle {since} · si azzera tra {in}"
 }
