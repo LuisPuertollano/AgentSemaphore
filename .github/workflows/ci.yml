@@ -183,15 +183,15 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - name: KWin and plasmashell
+      - name: Xvfb, kwin_x11 and plasmashell
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q --no-install-recommends kwin-wayland plasma-desktop plasma-workspace dbus-bin python3-gi python3-pil
+          sudo apt-get install -y -q --no-install-recommends xvfb x11-utils kwin-x11 plasma-desktop plasma-workspace libxcb-cursor0 imagemagick dbus-bin python3-pil
       - name: Build
         run: |
           go build -o "$RUNNER_TEMP/bin/agentsemaphore" ./cmd/agentsemaphore
           go build -o "$RUNNER_TEMP/bin/fakeagent" ./tools/e2e/fakeagent
-      - name: KWin on a virtual screen, plasmashell, a waiting session, the dot in the panel
+      - name: Plasma X11 session on a virtual display, a waiting session, the dot in the panel
         run: ./tools/e2e/kde-e2e.sh "$RUNNER_TEMP/bin/agentsemaphore" "$RUNNER_TEMP/bin/fakeagent"
       - uses: actions/upload-artifact@v7
         if: always()

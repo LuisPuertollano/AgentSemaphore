@@ -1,23 +1,27 @@
 #!/usr/bin/env bash
 # End-to-end test of the tray in a real KDE Plasma panel (CI runners).
 #
-# KWin runs on a virtual screen (no real display) with plasmashell and its
-# default panel; kded provides the StatusNotifierWatcher, as in a normal
-# Plasma session. A fake "claude" process and a session file that waits for a
-# permission make the dot red. Checked:
+# A Plasma X11 session on a virtual X display (Xvfb): kwin_x11, kded with its
+# StatusNotifierWatcher module, and plasmashell with its default panel. A fake
+# "claude" process and a session file that waits for a permission make the
+# dot red. Checked:
+#  - Plasma has a panel with the system tray in it;
 #  - Plasma's StatusNotifierWatcher lists our tray;
-#  - a screenshot from KWin (tools/e2e/kwin_screenshot.py) shows the dot's red (saved for review).
+#  - a screenshot of the display gained the dot's red, compared with one
+#    taken before the tray started (both saved for review).
+# Why X11 and not Wayland: on a runner without a GPU, KWin 6 on Wayland
+# renders in software and cancels every screenshot request (FINDINGS). The
+# panel, the tray and the protocol between them are the same in both.
 # Everything lives in a scratch HOME; nothing of the real user is read.
 #
-# Needs: kwin-wayland, plasma-desktop, dbus-run-session, python3 with PyGObject
-# and Pillow.
+# Needs: xvfb, kwin-x11, plasma-desktop, libxcb-cursor0, imagemagick,
+# x11-utils, dbus-run-session, python3 with Pillow.
 #
 # usage: kde-e2e.sh <agentsemaphore binary> <fakeagent binary>
 set -euo pipefail
 if [ "${1:-}" = --inner ]; then INNER=1; shift; else INNER=0; fi
 EXE=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
 FAKE=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
-HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${E2E_OUT:-${RUNNER_TEMP:-/tmp}/e2e-kde}
 
 ok()   { echo "ok  $*"; }
@@ -29,17 +33,21 @@ if [ "$INNER" = 0 ]; then
   chmod 700 "$OUT/rt"
   export HOME="$OUT/home" TMPDIR="$OUT/tmp" XDG_RUNTIME_DIR="$OUT/rt" E2E_OUT="$OUT"
   export LANG=en_US.UTF-8 LANGUAGE=en
-  unset XDG_CONFIG_HOME WAYLAND_DISPLAY DISPLAY
-  plasmashell --version 2>/dev/null || true
-  kwin_wayland --version 2>/dev/null || true
+  unset XDG_CONFIG_HOME WAYLAND_DISPLAY
+  kwin_x11 --version 2>/dev/null || true
+  Xvfb :88 -screen 0 1280x800x24 > "$OUT/xvfb.log" 2>&1 & XVFB=$!
+  trap 'kill $XVFB 2>/dev/null || true' EXIT
+  for _ in $(seq 40); do [ -e /tmp/.X11-unix/X88 ] && break; sleep 0.25; done
+  export DISPLAY=:88
   dbus-run-session -- "$0" --inner "$EXE" "$FAKE"
   exit 0
 fi
 
 # --- inside the private session bus --------------------------------------------------
-export XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6
+export XDG_SESSION_TYPE=x11 XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6
+export QT_QPA_PLATFORM=xcb
 # KDE's menu is plasma-applications.menu; without the prefix KService finds no
-# .desktop files (KWin logged "applications.menu not found").
+# .desktop files ("applications.menu not found").
 export XDG_MENU_PREFIX=plasma-
 mkdir -p "$HOME/.claude/sessions"
 cp "$FAKE" "$OUT/fake/claude"
@@ -49,7 +57,7 @@ cleanup() { kill "${PIDS[@]}" 2>/dev/null || true; }
 trap cleanup EXIT
 show_logs() {
   local f
-  for f in kwin kded plasmashell screenshot kbuildsycoca; do
+  for f in kwin kded plasmashell kbuildsycoca; do
     [ -f "$OUT/$f.log" ] && { echo "--- $f log (last 40 lines)"; tail -40 "$OUT/$f.log"; }
   done
   echo "--- tray output"; cat "$OUT/tray.out" 2>/dev/null || true
@@ -65,20 +73,18 @@ wait_for() { # command, description, timeout seconds
 has_owner() { gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus \
   --method org.freedesktop.DBus.NameHasOwner "$1" | grep -q true; }
 
-# The two KWIN_* variables switch off KWin's checks of which programs may take
-# screenshots, for this test's KWin only: kwin_screenshot.py is no installed
-# KDE program (without them KWin answers "NoAuthorized", measured with KWin 5.27).
-KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 \
-  kwin_wayland --virtual --width 1280 --height 800 --no-lockscreen --socket wayland-agsem > "$OUT/kwin.log" 2>&1 &
-PIDS+=($!)
-wait_for '[ -S "$XDG_RUNTIME_DIR/wayland-agsem" ]' 'KWin runs on a virtual screen' 60
-export WAYLAND_DISPLAY=wayland-agsem QT_QPA_PLATFORM=wayland
 # Programs that D-Bus starts on demand (kactivitymanagerd, which plasmashell
-# needs) must find the virtual screen too, not try X11.
+# needs) must find the display too.
 gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus \
   --method org.freedesktop.DBus.UpdateActivationEnvironment \
-  "{'WAYLAND_DISPLAY': '$WAYLAND_DISPLAY', 'QT_QPA_PLATFORM': 'wayland', 'XDG_SESSION_TYPE': 'wayland', 'XDG_CURRENT_DESKTOP': 'KDE', 'KDE_FULL_SESSION': 'true', 'KDE_SESSION_VERSION': '6', 'XDG_MENU_PREFIX': 'plasma-', 'XDG_RUNTIME_DIR': '$XDG_RUNTIME_DIR', 'HOME': '$HOME'}" >/dev/null
-command -v kbuildsycoca6 >/dev/null && kbuildsycoca6 > "$OUT/kbuildsycoca.log" 2>&1 || true
+  "{'DISPLAY': '$DISPLAY', 'QT_QPA_PLATFORM': 'xcb', 'XDG_SESSION_TYPE': 'x11', 'XDG_CURRENT_DESKTOP': 'KDE', 'KDE_FULL_SESSION': 'true', 'KDE_SESSION_VERSION': '6', 'XDG_MENU_PREFIX': 'plasma-', 'XDG_RUNTIME_DIR': '$XDG_RUNTIME_DIR', 'HOME': '$HOME'}" >/dev/null
+command -v kbuildsycoca6 >/dev/null && timeout 60 kbuildsycoca6 > "$OUT/kbuildsycoca.log" 2>&1 || true
+
+xdpyinfo -display "$DISPLAY" >/dev/null 2>&1 || fail 'the virtual X display (Xvfb) runs'
+ok 'the virtual X display (Xvfb) runs'
+kwin_x11 > "$OUT/kwin.log" 2>&1 &
+PIDS+=($!)
+wait_for 'xprop -root _NET_SUPPORTING_WM_CHECK | grep -q "window id"' 'kwin_x11 manages the display' 60
 
 KDED=$(command -v kded6 || command -v kded5 || ls /usr/lib/*/libexec/kf6/kded6 2>/dev/null | head -1 || true)
 [ -n "$KDED" ] || fail 'kded is installed'
@@ -91,8 +97,8 @@ gdbus call --session --dest "$KDEDNAME" --object-path /kded --method "$KDEDNAME.
 wait_for 'has_owner org.kde.StatusNotifierWatcher' "Plasma's StatusNotifierWatcher is on the bus" 30
 
 plasmashell --no-respawn > "$OUT/plasmashell.log" 2>&1 &
-PIDS+=($!)
 PLASMA=$!
+PIDS+=($PLASMA)
 wait_for 'has_owner org.kde.plasmashell' 'plasmashell runs' 60
 plasma_script() { gdbus call --session --dest org.kde.plasmashell --object-path /PlasmaShell \
   --method org.kde.PlasmaShell.evaluateScript "$1"; }
@@ -101,32 +107,30 @@ wait_for "kill -0 $PLASMA && plasma_script '$tray_in_panel' | grep -q \"'[1-9]\"
 plasma_script 'print(panels().map(p => p.location + ":" + p.widgets().map(w => w.type).join(",")).join(" | "))' \
   | tee "$OUT/panels.txt"
 
-shot() { # file: screenshot of the active screen, straight from KWin (Spectacle hung on a headless KWin)
-  rm -f "$1"
-  timeout 60 /usr/bin/python3 "$HERE/kwin_screenshot.py" "$1" >> "$OUT/screenshot.log" 2>&1 \
-    || { cat "$OUT/screenshot.log"; show_logs; fail "screenshot from KWin ($1)"; }
-  [ -s "$1" ] || { show_logs; fail "screenshot from KWin ($1)"; }
+shot() { # file: the whole virtual display, straight from the X server
+  timeout 30 import -display "$DISPLAY" -window root "$1" || { show_logs; fail "screenshot ($1)"; }
+  [ -s "$1" ] || { show_logs; fail "screenshot ($1)"; }
 }
-panel_reds() { # file: pixels in the dot's red on the screen; the bottom 80 px (default panel) saved as *-panel.png
-  python3 - "$1" <<'PY'
+reds() { # file: pixels in the dot's red on the screen; the bottom 80 px (default panel) also saved as *-panel.png
+  /usr/bin/python3 - "$1" <<'PY'
 import sys
 from PIL import Image
 im = Image.open(sys.argv[1]).convert("RGB")
 w, h = im.size
 im.crop((0, h - 80, w, h)).save(sys.argv[1].replace(".png", "-panel.png"))  # for review
-px = im.tobytes()  # count the whole screen: the before/after difference cancels the wallpaper
+px = im.tobytes()  # the whole screen: the before/after difference cancels the wallpaper
 print(sum(1 for i in range(0, len(px), 3)
           if abs(px[i] - 220) < 30 and abs(px[i + 1] - 38) < 30 and abs(px[i + 2] - 38) < 30))
 PY
 }
 
-# The panel before the tray starts, so red already on screen is not counted.
+# The display before the tray starts, so red already on screen is not counted.
 sleep 8
 shot "$OUT/kde-before.png"
-before=$(panel_reds "$OUT/kde-before.png")
-echo "red pixels in the panel before the tray: $before"
+before=$(reds "$OUT/kde-before.png")
+echo "red pixels before the tray: $before"
 
-"$OUT/fake/claude" & PIDS+=($!); P0=$!
+"$OUT/fake/claude" & P0=$!; PIDS+=($P0)
 printf '{"pid": %s, "name": "e2e-wait", "status": "waiting", "kind": "interactive", "waitingFor": "permission prompt"}\n' \
   "$P0" > "$HOME/.claude/sessions/$P0.json"
 "$EXE" > "$OUT/tray.out" 2>&1 & TRAY=$!; PIDS+=($TRAY)
@@ -139,9 +143,9 @@ registered | tee "$OUT/registered.txt"
 sleep 8
 shot "$OUT/kde-red.png"
 ok 'screenshot saved'
-reds=$(panel_reds "$OUT/kde-red.png")
-echo "red pixels in the panel with the tray: $reds"
-[ "$((reds - before))" -ge 20 ] || { show_logs; fail 'the dot in the Plasma panel is red'; }
+after=$(reds "$OUT/kde-red.png")
+echo "red pixels with the tray: $after"
+[ "$((after - before))" -ge 20 ] || { show_logs; fail 'the dot in the Plasma panel is red'; }
 ok 'the dot in the Plasma panel is red'
 
 kill -0 "$TRAY" 2>/dev/null || { show_logs; fail 'tray app keeps running'; }
