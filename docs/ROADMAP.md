@@ -102,8 +102,10 @@ Next:
 - ✅ Repo public, MIT, README with visuals, contributing guide, pre-releases.
 - ✅ Website (GitHub Pages), real screenshots (Linux, XFCE; `tools/screenshots/linux.sh`), test-report form.
 - ✅ Scoop manifest with every release (Windows), installed and checked in CI.
-- Next: Homebrew (needs a tap kept in step with each release) and winget (needs a pull request to
-  microsoft/winget-pkgs per release); Windows/macOS screenshots from testers.
+- Next: Windows/macOS screenshots from testers; Windows code signing (free for open source through
+  SignPath Foundation; to be decided).
+- Not planned (decided 2026-11-25): Homebrew and winget. Each needs a package kept in step with every
+  release outside this repository; the install scripts and Scoop cover macOS and Windows.
 - Everything free; no telemetry.
 
 ## Ideas (not scheduled)
