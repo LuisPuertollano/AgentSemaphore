@@ -6,17 +6,18 @@
 # Plasma session. A fake "claude" process and a session file that waits for a
 # permission make the dot red. Checked:
 #  - Plasma's StatusNotifierWatcher lists our tray;
-#  - a screenshot taken with Spectacle shows the dot's red (saved for review).
+#  - a screenshot from KWin (tools/e2e/kwin_screenshot.py) shows the dot's red (saved for review).
 # Everything lives in a scratch HOME; nothing of the real user is read.
 #
-# Needs: kwin-wayland, plasma-desktop, kde-spectacle, dbus-run-session, python3
-# with Pillow.
+# Needs: kwin-wayland, plasma-desktop, dbus-run-session, python3 with PyGObject
+# and Pillow.
 #
 # usage: kde-e2e.sh <agentsemaphore binary> <fakeagent binary>
 set -euo pipefail
 if [ "${1:-}" = --inner ]; then INNER=1; shift; else INNER=0; fi
 EXE=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
 FAKE=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
+HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${E2E_OUT:-${RUNNER_TEMP:-/tmp}/e2e-kde}
 
 ok()   { echo "ok  $*"; }
@@ -38,7 +39,7 @@ fi
 # --- inside the private session bus --------------------------------------------------
 export XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6
 # KDE's menu is plasma-applications.menu; without the prefix KService finds no
-# .desktop files, and KWin then cannot tell that Spectacle may take screenshots.
+# .desktop files (KWin logged "applications.menu not found").
 export XDG_MENU_PREFIX=plasma-
 mkdir -p "$HOME/.claude/sessions"
 cp "$FAKE" "$OUT/fake/claude"
@@ -48,7 +49,7 @@ cleanup() { kill "${PIDS[@]}" 2>/dev/null || true; }
 trap cleanup EXIT
 show_logs() {
   local f
-  for f in kwin kded plasmashell spectacle kbuildsycoca; do
+  for f in kwin kded plasmashell screenshot kbuildsycoca; do
     [ -f "$OUT/$f.log" ] && { echo "--- $f log (last 40 lines)"; tail -40 "$OUT/$f.log"; }
   done
   echo "--- tray output"; cat "$OUT/tray.out" 2>/dev/null || true
@@ -64,9 +65,9 @@ wait_for() { # command, description, timeout seconds
 has_owner() { gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus \
   --method org.freedesktop.DBus.NameHasOwner "$1" | grep -q true; }
 
-# The two KWIN_* variables switch KWin's checks of which programs may take
-# screenshots off, for this test's KWin only (they are a fallback in case the
-# .desktop lookup above still fails on the runner).
+# The two KWIN_* variables switch off KWin's checks of which programs may take
+# screenshots, for this test's KWin only: kwin_screenshot.py is no installed
+# KDE program (without them KWin answers "NoAuthorized", measured with KWin 5.27).
 KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 \
   kwin_wayland --virtual --width 1280 --height 800 --no-lockscreen --socket wayland-agsem > "$OUT/kwin.log" 2>&1 &
 PIDS+=($!)
@@ -100,12 +101,11 @@ wait_for "kill -0 $PLASMA && plasma_script '$tray_in_panel' | grep -q \"'[1-9]\"
 plasma_script 'print(panels().map(p => p.location + ":" + p.widgets().map(w => w.type).join(",")).join(" | "))' \
   | tee "$OUT/panels.txt"
 
-shot() { # file: full-screen screenshot with Spectacle (KWin allows its screenshot interface to Spectacle)
+shot() { # file: screenshot of the active screen, straight from KWin (Spectacle hung on a headless KWin)
   rm -f "$1"
-  spectacle --background --nonotify --fullscreen --output "$1" >> "$OUT/spectacle.log" 2>&1 \
-    || { show_logs; fail "screenshot with Spectacle ($1)"; }
-  for _ in $(seq 20); do [ -s "$1" ] && return 0; sleep 0.5; done
-  show_logs; fail "screenshot with Spectacle ($1)"
+  timeout 60 /usr/bin/python3 "$HERE/kwin_screenshot.py" "$1" >> "$OUT/screenshot.log" 2>&1 \
+    || { cat "$OUT/screenshot.log"; show_logs; fail "screenshot from KWin ($1)"; }
+  [ -s "$1" ] || { show_logs; fail "screenshot from KWin ($1)"; }
 }
 panel_reds() { # file: pixels in the dot's red on the screen; the bottom 80 px (default panel) saved as *-panel.png
   python3 - "$1" <<'PY'
