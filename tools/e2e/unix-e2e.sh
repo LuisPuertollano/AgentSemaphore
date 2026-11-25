@@ -212,6 +212,8 @@ case "$(uname -s)" in
       '') echo 'note: not listed by lsappinfo, so the Dock check could not run' ;;
       *) ok "no Dock icon ($apptype)" ;;
     esac
+    # Diagnostic for now: can a script click the menu bar item and read its menu?
+    "$(dirname "$0")/macos-menu.sh" "$OUT" || true
     screencapture -x "$OUT/desktop.png" 2>/dev/null && ok 'screenshot saved (for review, not an assertion)' || echo 'note: no screenshot'
     ;;
 esac
