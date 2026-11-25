@@ -154,7 +154,7 @@ try {
     Check (-not ((Menu) -match 'limit reached')) '"limit reached" goes when Claude Code reports the reset'
     & $Exe usage uninstall claude | Out-Null
     $restored = Get-Content $claudeSettings -Raw | ConvertFrom-Json
-    Check ($restored.statusLine.command -eq 'echo MY-LINE' -and $restored.statusLine.padding -eq 1 -and $restored.model -eq 'opus' -and -not $restored.hooks) 'usage uninstall restores the status line and removes our hooks exactly'
+    Check ($restored.statusLine.command -eq 'echo MY-LINE' -and $restored.statusLine.padding -eq 1 -and $restored.model -eq 'opus' -and -not ($restored.PSObject.Properties.Name -contains 'hooks')) 'usage uninstall restores the status line and removes our hooks exactly'
   } finally {
     if ($hadSettings) { Set-Content $claudeSettings $savedSettings -NoNewline } else { Remove-Item $claudeSettings -ErrorAction SilentlyContinue }
   }
