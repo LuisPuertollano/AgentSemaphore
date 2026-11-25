@@ -239,7 +239,11 @@ on the menu bar item, right and Control clicks included, to the left-click handl
 with Command held are passed through). With a left-click handler set
 (`SetOnTapped`), as on Windows and Linux to open Claude, the menu could not be opened at all on macOS.
 So on macOS no handler is set: a click shows the menu, as menu bar items usually do, and Claude is
-opened from the menu's "Open Claude". Found by reading the library code; not yet seen on a real Mac.
+opened from the menu's "Open Claude". Found by reading the library code. **Checked in CI since 2026-11-25**
+(macOS Apple silicon and Intel runners): System Events sees the tray as a "status menu" item in menu bar 1;
+clicking it opens the menu, whose items it can read (the waiting session, "Open Claude", "Quit"…). A
+System Events click (Accessibility "press") reaches the same left-click handler as a mouse click. Not yet seen
+on a real Mac.
 
 **Dock.** The tray is a bare executable, not an `.app` bundle, and fyne.io/systray does not set an activation
 policy. On the `macos-latest` runner (Apple silicon) `lsappinfo` lists the running tray as

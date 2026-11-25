@@ -9,8 +9,9 @@
 #  - Linux: on a private session bus, a minimal StatusNotifierWatcher
 #    (tools/e2e/snwatcher) reads back what a panel would show: the dot's
 #    colour, the tooltip and the menu;
-#  - macOS: the app must not get a Dock icon (lsappinfo); a screenshot of the
-#    menu bar is saved for review (not an assertion).
+#  - macOS: the app must not get a Dock icon (lsappinfo), and a click on its
+#    menu bar item must open the menu (System Events); a screenshot of the
+#    menu bar is saved for review.
 # HOME, the config dir and TMPDIR point into a scratch folder, so nothing of
 # the real user's ~/.claude is read or written.
 #
@@ -212,6 +213,8 @@ case "$(uname -s)" in
       '') echo 'note: not listed by lsappinfo, so the Dock check could not run' ;;
       *) ok "no Dock icon ($apptype)" ;;
     esac
+    # A click must open the menu (Accessibility API; see macos-menu.sh).
+    "$(dirname "$0")/macos-menu.sh" "$OUT" || fail 'macOS menu bar click'
     screencapture -x "$OUT/desktop.png" 2>/dev/null && ok 'screenshot saved (for review, not an assertion)' || echo 'note: no screenshot'
     ;;
 esac
