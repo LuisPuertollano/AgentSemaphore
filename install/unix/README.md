@@ -25,7 +25,8 @@ From a clone of this repo: `bash install/unix/install.sh --autostart`.
 
 - **Linux:** the dot is a StatusNotifierItem (the tray protocol KDE Plasma uses natively). GNOME
   shows it only with the AppIndicator extension; Ubuntu enables that by default. GNOME 50 with that
-  extension is tested in CI (headless); other desktops are untested so far.
+  extension and KDE Plasma 6.6 (X11 session) are tested in CI on virtual displays; other desktops are
+  untested so far.
 - **macOS:** the binary is not notarized (that needs a paid Apple account). Files downloaded with
   `curl`, as this script does, are normally not quarantined, so Gatekeeper does not block them. If you
   download a binary with a browser instead, run it once with right-click → Open, or

@@ -174,6 +174,33 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  kde:
+    name: KDE Plasma panel (Linux x64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Xvfb, kwin_x11 and plasmashell
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends xvfb x11-utils kwin-x11 plasma-desktop plasma-workspace libxcb-cursor0 imagemagick dbus-bin python3-pil
+      - name: Build
+        run: |
+          go build -o "$RUNNER_TEMP/bin/agentsemaphore" ./cmd/agentsemaphore
+          go build -o "$RUNNER_TEMP/bin/fakeagent" ./tools/e2e/fakeagent
+      - name: Plasma X11 session on a virtual display, a waiting session, the dot in the panel
+        run: ./tools/e2e/kde-e2e.sh "$RUNNER_TEMP/bin/agentsemaphore" "$RUNNER_TEMP/bin/fakeagent"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-kde
+          path: ${{ runner.temp }}/e2e-kde/*.*
+          if-no-files-found: ignore
+          retention-days: 14
+
   # Windows on Arm runners are free only for public repositories.
   go-windows-arm:
     name: Go tests (windows-11-arm)

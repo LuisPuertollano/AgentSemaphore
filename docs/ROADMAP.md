@@ -68,8 +68,11 @@ Done:
 Next:
 - ✅ GNOME in CI: GNOME Shell 50 runs headless with Ubuntu's AppIndicator extension; the dot is
   checked in the real top bar (registered, visible, red in a screenshot). See FINDINGS.
-- Linux: other desktops (KDE Plasma, Cinnamon, XFCE as a full session…) and real GNOME sessions. In CI
-  where possible, otherwise by user reports.
+- ✅ KDE Plasma in CI: a Plasma 6.6 X11 session (kwin_x11, kded, plasmashell) on Xvfb; the dot is
+  checked in the default panel's system tray (registered, red in a screenshot). Plasma on Wayland could
+  not be screenshotted on a runner without a GPU (see FINDINGS).
+- Linux: other desktops (Cinnamon, XFCE as a full session…), real GNOME and Plasma sessions, Plasma on
+  Wayland. In CI where possible, otherwise by user reports.
 
 ## Phase 3 — More agents 🚧
 - ✅ One generic hook source (`internal/source/hooks`): the agent runs
